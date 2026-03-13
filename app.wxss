@@ -1,12 +1,15 @@
 page {
   background-color: #121212;
+  color: #f9fafb;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 text {
-  color: #ffffff;
+  color: inherit;
 }
 
 button {
-  border-radius: 999rpx;
+  border-radius: 0;
+  background: none;
+  border: none;
 }
-

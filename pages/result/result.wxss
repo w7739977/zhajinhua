@@ -1,38 +1,42 @@
 .result-page {
   min-height: 100vh;
   background: #121212;
-  color: #fff;
-  padding: 24rpx;
+  padding: 32rpx 32rpx 140rpx;
   box-sizing: border-box;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 30rpx;
+  margin-bottom: 32rpx;
+}
+
+.header text {
+  font-size: 28rpx;
+  color: #e5e7eb;
 }
 
 .public-card {
   text-align: center;
-  margin-bottom: 40rpx;
-  font-size: 32rpx;
+  margin-bottom: 32rpx;
 }
 
 .public-label {
-  color: #ccc;
-  margin-right: 12rpx;
+  font-size: 24rpx;
+  color: #9ca3af;
+  margin-right: 10rpx;
 }
 
-/* 通用扑克牌样式，较小尺寸 */
+/* 扑克牌：与房间页统一 */
 .poker-card {
   width: 70rpx;
   height: 100rpx;
   border-radius: 10rpx;
-  border: 2rpx solid #e0e0e0;
-  background: #ffffff;
+  border: 1rpx solid rgba(243, 244, 246, 0.24);
+  background: #f9fafb;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.35);
+  box-shadow: 0 14rpx 35rpx rgba(0, 0, 0, 0.75);
 }
 
 .poker-card-large {
@@ -42,10 +46,14 @@
 
 .poker-card-text {
   font-size: 24rpx;
-  color: #222;
+  color: #111827;
 }
 
 .players-list {
+  background: #18181b;
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+  box-shadow: 0 18rpx 45rpx rgba(0, 0, 0, 0.85);
   margin-bottom: 80rpx;
 }
 
@@ -53,15 +61,19 @@
   display: flex;
   align-items: center;
   padding: 16rpx 0;
-  border-bottom: 1px solid #333;
+  border-bottom: 1rpx solid #27272a;
+}
+
+.player-row:last-child {
+  border-bottom: none;
 }
 
 .avatar {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  background: #333;
-  margin-right: 20rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 999rpx;
+  background: #27272a;
+  margin-right: 16rpx;
 }
 
 .info {
@@ -70,13 +82,14 @@
 }
 
 .name {
-  font-size: 28rpx;
+  font-size: 26rpx;
+  color: #f9fafb;
   margin-bottom: 6rpx;
 }
 
 .card {
   font-size: 24rpx;
-  color: #ccc;
+  color: #d1d5db;
 }
 
 .card-label {
@@ -84,26 +97,21 @@
 }
 
 .card.placeholder {
-  color: #666;
+  color: #6b7280;
 }
 
 .back-btn {
   position: fixed;
   left: 10%;
   right: 10%;
-  bottom: 60rpx;
-}
-
-.back-btn {
-  position: fixed;
-  left: 10%;
-  right: 10%;
-  bottom: 60rpx;
-  height: 80rpx;
-  line-height: 80rpx;
+  bottom: 40rpx;
+  height: 88rpx;
+  line-height: 88rpx;
   border-radius: 999rpx;
   border: none;
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-  color: #ffffff;
+  background: #2563eb;
+  color: #f9fafb;
   font-size: 30rpx;
+  font-weight: 500;
+  box-shadow: 0 18rpx 45rpx rgba(37, 99, 235, 0.8);
 }
