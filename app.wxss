@@ -1,5 +1,10 @@
 page {
-  background-color: #121212;
+  background-color: #0b2018;
+  background-image:
+    radial-gradient(circle at 20% 18%, rgba(110, 231, 183, 0.08), transparent 24%),
+    radial-gradient(circle at 80% 22%, rgba(16, 185, 129, 0.06), transparent 28%),
+    radial-gradient(circle at 50% 100%, rgba(0, 0, 0, 0.34), transparent 36%),
+    linear-gradient(180deg, #123327 0%, #0c241b 52%, #081611 100%);
   color: #f9fafb;
   font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }

@@ -16,6 +16,12 @@ function normalizePlayers(players) {
   }))
 }
 
+function getCardColorClass(card) {
+  const text = typeof card === 'string' ? card : card && card.text
+  if (!text) return ''
+  return text.startsWith('♥') || text.startsWith('♦') ? 'poker-card-text-red' : ''
+}
+
 let roomWatcher = null
 
 Page({
@@ -25,6 +31,8 @@ Page({
     players: [],
     displayPlayers: [],
     otherPlayers: [],
+    leftPlayers: [],
+    rightPlayers: [],
     selfPlayer: null,
     publicCard: null,
     publicCardText: '',
@@ -121,7 +129,14 @@ Page({
         ...p,
         card: null
       }))
+    // 其他玩家始终基于入房顺序旋转：
+    // 自己固定在底部，逆时针方向依次排到右侧，再绕到左侧，保证所有客户端顺序一致。
+    const splitIndex = Math.ceil(otherPlayers.length / 2)
+    const rightPlayers = otherPlayers.slice(0, splitIndex).reverse()
+    const leftPlayers = otherPlayers.slice(splitIndex)
     const publicCardText = (publicCard && (typeof publicCard === 'string' ? publicCard : publicCard.text)) || ''
+    const publicCardColorClass = getCardColorClass(publicCard)
+    const selfCardColorClass = getCardColorClass(self && self.card)
     const allReady = players.length > 0 && players.every((p) => p.isReady === true)
     const allDealt = players.length > 0 && players.every((p) => p.hasDealt === true)
     const isReady = !!(self && self.isReady === true)
@@ -133,9 +148,13 @@ Page({
       players,
       displayPlayers: ordered,
       otherPlayers,
+      leftPlayers,
+      rightPlayers,
       selfPlayer: self,
       publicCard,
       publicCardText,
+      publicCardColorClass,
+      selfCardColorClass,
       status,
       isReady,
       hasDealt,
