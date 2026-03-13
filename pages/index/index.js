@@ -15,7 +15,8 @@ Page({
       app.globalData.userInfo = savedUserInfo
       this.setData({
         authorizedUserInfo: savedUserInfo,
-        showAuthModal: false
+        customNickName: savedUserInfo.nickName || '',
+        showAuthModal: true
       })
     }
   },

@@ -12,4 +12,17 @@ button {
   border-radius: 0;
   background: none;
   border: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+button::after {
+  border: none;
+  display: none;
+}
+
+input, textarea {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
 }

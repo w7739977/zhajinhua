@@ -1,9 +1,9 @@
-## 诈金花小程序前端样式概览（V1）
+## 诈金花小程序前端样式概览（V2）
 
 ### 全局基调
 
-- **配色**：深色背景（#121212），前景为白色文字，强调色为橙色渐变按钮和蓝色/绿色点缀。
-- **圆角与按钮**：所有主操作按钮使用大圆角胶囊形（border-radius: 999rpx），扁平化无默认边框，禁用态降低透明度。
+- **配色**：深色背景（#121212），前景为白色文字，强调色为蓝色主按钮和绿色状态点缀。
+- **圆角与按钮**：所有首页主操作统一为胶囊形操作行（border-radius: 999rpx），优先用普通 `view` 渲染点击区域，避免原生 `button` 默认样式干扰宽度。
 - **字体**：默认微信字体，标题偏大号（约 52rpx / 30rpx），正文 24–30rpx。
 
 ---
@@ -27,27 +27,25 @@
     - `profile-preview`：授权后的头像昵称预览
     - `profile-avatar`：头像预览
     - `profile-name`：授权昵称预览
-    - `input.room-input.nickname-input`：自定义昵称输入框
-    - `button.btn.btn-primary.auth-btn`：同意授权并获取头像昵称
-    - `button.btn.btn-secondary.auth-btn`：确认并进入大厅
+    - `auth-action-group`：授权区操作容器
+    - `view.action-row.btn-primary`：授权头像及昵称
+    - `view.action-row.input-row > input.action-input`：自定义昵称输入框
+    - `view.action-row.btn-secondary`：确认并进入大厅
 - 按钮区：
   - 容器：`action-panel`
     - 仅在身份信息确认完成后展示。
-  - **创建房间按钮**：`button.btn.btn-primary`
+  - **创建房间按钮**：`view.action-row.btn-primary`
     - 语义：主操作。
-    - 样式：宽 80%、高度 80rpx、橙色渐变背景（#ffb74d → #ff7043）、黑色文字。
-  - **加入房间按钮**：`button.btn.btn-secondary`
+    - 样式：宽度占满容器，高度 `88rpx`，蓝色实底，白字。
+  - **加入房间按钮**：`view.action-row.btn-secondary`
     - 语义：次主操作。
-    - 样式：宽 80%、深灰背景 #2d2d2d、白字。
-  - **加入房间输入框容器**：`join-wrap`
-    - 内含：
-      - `input.room-input`：深灰输入框（#1f1f1f）、圆角 12rpx、白字，占满宽度。
-      - `button.btn.btn-primary` 确认加入按钮（样式同创建房间）。
-  - **授权头像昵称按钮**：`button.btn.btn-ghost.user-btn`
-    - 语义：辅助操作。
-    - 样式：透明背景，浅灰文字，边框 #444；位于底部偏下。
+    - 样式：宽度占满容器，高度 `88rpx`，深灰背景，白字。
+  - **加入房间输入框**：`view.action-row.input-row > input.action-input`
+    - 深灰输入框、`999rpx` 圆角、白字，占满宽度；与相邻按钮共享同一外层尺寸。
+  - **确认加入按钮**：`view.action-row.btn-primary`
+    - 样式同创建房间。
 
-> 设计提示：首页可强化标题与主按钮之间的视觉层级，例如在标题下方增加简短副标题或渐变分割线。
+> 设计提示：首页当前采用“统一操作行”方案，按钮与输入框必须共享同一套高、宽、圆角、阴影规则，否则在小程序环境里容易出现宽度不齐。
 > 当前逻辑上，首页是一个“先确认身份，再进入大厅操作”的双层结构，渲染时不要去掉弹框遮罩与确认门槛。
 
 ---
@@ -146,13 +144,14 @@
 
 ## 通用组件与样式约定
 
-### 按钮（Button）
+### 操作行（ActionRow）
 
-- 类名：`.btn`, `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.back-btn`, `.ready-tag`。
+- 首页核心类名：`.action-row`, `.btn-primary`, `.btn-secondary`, `.input-row`, `.action-input`。
 - 统一特点：
   - 胶囊造型（border-radius: 999rpx）。
-  - 无系统默认边框，纯自定义背景。
-  - 主按钮多用渐变背景、深色文字；次按钮用实心深灰背景、浅色文字；幽灵按钮透明背景 + 1rpx 细边框。
+  - 高度统一为 `88rpx`。
+  - 主按钮为蓝色实底；次按钮为深灰实底；输入框外层也使用同样的圆角、阴影与高度。
+  - 首页优先使用 `view + bindtap`，避免小程序原生 `button` 自带默认间距。
 
 ### 扑克牌（PokerCard）
 
