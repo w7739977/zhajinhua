@@ -8,6 +8,8 @@ function rotatePlayers(players, selfOpenId) {
   return ordered
 }
 
+let roomWatcher = null;
+
 Page({
   data: {
     roomId: '',
@@ -51,7 +53,7 @@ Page({
           }
           this.fetchRoom()
         })
-        .catch((e) => {
+        .catch(() => {
           wx.hideLoading()
           wx.showToast({ title: '新一局失败', icon: 'none' })
           this.fetchRoom()
@@ -60,6 +62,70 @@ Page({
     }
 
     this.fetchRoom()
+    this.initRoomWatcher()
+  },
+
+  updateRoomView(room) {
+    if (!room) return
+    const players = room.players || []
+    const publicCard = room.publicCard || null
+
+    const selfOpenId = this.selfOpenId
+    const ordered = rotatePlayers(players, selfOpenId).map((p) => ({
+      ...p,
+      isSelf: p.openId === selfOpenId
+    }))
+
+    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || null
+    let self = players.find((p) => p.openId === selfOpenId)
+    if (self && userInfo) {
+      self = {
+        ...self,
+        nickName: userInfo.nickName || self.nickName,
+        avatarUrl: userInfo.avatarUrl || self.avatarUrl
+      }
+    }
+
+    const publicCardText = (publicCard && (typeof publicCard === 'string' ? publicCard : publicCard.text)) || ''
+    const otherPlayers = ordered.filter((p) => !p.isSelf)
+    const canOpen = players.length > 0 && players.every((p) => p.hasDealt)
+
+    this.setData({
+      players,
+      displayPlayers: ordered,
+      otherPlayers,
+      selfPlayer: self || null,
+      publicCard,
+      publicCardText,
+      hasDealt: !!(self && self.hasDealt),
+      canOpen
+    })
+  },
+
+  initRoomWatcher() {
+    if (roomWatcher || !this.data.roomId) return
+    const db = wx.cloud.database()
+    roomWatcher = db
+      .collection('rooms')
+      .where({ roomId: this.data.roomId })
+      .watch({
+        onChange: (snapshot) => {
+          const docs = snapshot.docs || []
+          if (!docs.length) return
+          const room = docs[0]
+          this.updateRoomView(room)
+        },
+        onError: (err) => {
+          console.error('room watch error', err)
+        }
+      })
+  },
+
+  closeRoomWatcher() {
+    if (roomWatcher) {
+      roomWatcher.close()
+      roomWatcher = null
+    }
   },
 
   async fetchRoom() {
@@ -79,30 +145,7 @@ Page({
         return
       }
       const room = result.room
-      const players = room.players || []
-      const publicCard = room.publicCard || null
-
-      const selfOpenId = this.selfOpenId
-      const ordered = rotatePlayers(players, selfOpenId).map((p) => ({
-        ...p,
-        isSelf: p.openId === selfOpenId
-      }))
-
-      const self = players.find((p) => p.openId === selfOpenId)
-      const publicCardText = (publicCard && (typeof publicCard === 'string' ? publicCard : publicCard.text)) || ''
-      const otherPlayers = ordered.filter((p) => !p.isSelf)
-      const canOpen = players.length > 0 && players.every((p) => p.hasDealt)
-
-      this.setData({
-        players,
-        displayPlayers: ordered,
-        otherPlayers,
-        selfPlayer: self || null,
-        publicCard,
-        publicCardText,
-        hasDealt: !!(self && self.hasDealt),
-        canOpen
-      })
+      this.updateRoomView(room)
     } catch (e) {
       wx.hideLoading()
       wx.showToast({ title: '加载失败', icon: 'none' })
@@ -115,6 +158,14 @@ Page({
       title: `邀请你加入房间 ${roomId}`,
       path: `/pages/room/room?roomId=${roomId}`
     }
+  },
+
+  onHide() {
+    this.closeRoomWatcher()
+  },
+
+  onUnload() {
+    this.closeRoomWatcher()
   },
 
   onDeal() {
@@ -160,36 +211,7 @@ Page({
             return
           }
           const room = result.room
-          const players = (room && room.players) || []
-          const publicCard = (room && room.publicCard) || null
-
-          // 用云端返回的 currentOpenId 兜底，避免 globalData.openId 未同步导致找不到自己
-          const currentOpenId = result.currentOpenId || this.selfOpenId || app.globalData.openId || ''
-          if (currentOpenId && !this.selfOpenId) {
-            this.selfOpenId = currentOpenId
-            app.globalData.openId = currentOpenId
-          }
-
-          const selfOpenId = this.selfOpenId
-          const ordered = rotatePlayers(players, selfOpenId).map((p) => ({
-            ...p,
-            isSelf: p.openId === selfOpenId
-          }))
-          const self = players.find((p) => p.openId === selfOpenId)
-          const publicCardText = (publicCard && (typeof publicCard === 'string' ? publicCard : publicCard.text)) || ''
-          const otherPlayers = ordered.filter((p) => !p.isSelf)
-          const canOpen = players.length > 0 && players.every((p) => p.hasDealt)
-
-          this.setData({
-            players,
-            displayPlayers: ordered,
-            otherPlayers,
-            selfPlayer: self || null,
-            publicCard,
-            publicCardText,
-            hasDealt: !!(self && self.hasDealt),
-            canOpen
-          })
+          this.updateRoomView(room)
         } catch (err) {
           console.error('[onDeal] then 内异常:', err)
           wx.showToast({ title: '发牌解析异常', icon: 'none' })
