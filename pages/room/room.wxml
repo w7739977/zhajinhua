@@ -4,27 +4,65 @@
     <button class="invite-btn" open-type="share">邀请好友</button>
   </view>
 
-  <view class="other-players" wx:if="{{otherPlayers.length > 0}}">
-    <block wx:for="{{otherPlayers}}" wx:key="openId">
-      <view class="other-player-item">
-        <image class="avatar {{item.hasDealt ? 'avatar-dealt' : (item.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
-        <text class="nickname">{{item.nickName || '玩家'}}</text>
-        <text class="ready-tag" wx:if="{{item.isReady}}">已准备</text>
-        <text class="ready-tag pending" wx:else>未准备</text>
-        <text class="deal-tag" wx:if="{{item.hasDealt}}">已发牌</text>
-        <text class="deal-tag pending" wx:else>未发牌</text>
-      </view>
-    </block>
+  <view class="mock-panel" wx:if="{{showMockTools}}">
+    <view class="mock-panel-header">
+      <text class="mock-panel-title">测试分支模拟面板</text>
+      <text class="mock-panel-meta">模拟玩家：{{mockCount}}</text>
+    </view>
+    <view class="mock-actions">
+      <button class="mock-btn" bindtap="onMockSetup">添加6个模拟玩家</button>
+      <button class="mock-btn" bindtap="onMockReadyOthers">模拟其他人准备</button>
+      <button class="mock-btn" bindtap="onMockDealOthers">模拟其他人发牌</button>
+      <button class="mock-btn danger" bindtap="onMockClear">清空模拟玩家</button>
+    </view>
   </view>
 
-  <view class="center-card" wx:if="{{publicCard !== null && publicCard !== ''}}">
-    <text class="center-card-label">公牌：</text>
-    <view class="poker-card poker-card-large">
-      <text class="poker-card-text">{{publicCardText}}</text>
+  <view class="table-stage" wx:if="{{otherPlayers.length > 0 || publicCardText}}">
+    <view class="side-column left-column">
+      <block wx:for="{{leftPlayers}}" wx:key="openId">
+        <view class="other-player-item">
+          <view class="seat-base"></view>
+          <image class="avatar {{item.hasDealt ? 'avatar-dealt' : (item.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+          <text class="nickname">{{item.nickName || '玩家'}}</text>
+          <text class="mock-tag" wx:if="{{item.isMock}}">模拟</text>
+          <text class="ready-tag" wx:if="{{item.isReady}}">已准备</text>
+          <text class="ready-tag pending" wx:else>未准备</text>
+          <text class="deal-tag" wx:if="{{item.hasDealt}}">已发牌</text>
+          <text class="deal-tag pending" wx:else>未发牌</text>
+        </view>
+      </block>
+    </view>
+
+    <view class="center-zone">
+      <view class="center-card" wx:if="{{publicCard !== null && publicCard !== ''}}">
+        <text class="center-card-label">公牌</text>
+        <view class="poker-card poker-card-large">
+          <text class="poker-card-text {{publicCardColorClass}}">{{publicCardText}}</text>
+        </view>
+      </view>
+      <view class="center-card card-placeholder" wx:else>
+        <text class="center-card-label">等待公牌</text>
+      </view>
+    </view>
+
+    <view class="side-column right-column">
+      <block wx:for="{{rightPlayers}}" wx:key="openId">
+        <view class="other-player-item">
+          <view class="seat-base"></view>
+          <image class="avatar {{item.hasDealt ? 'avatar-dealt' : (item.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+          <text class="nickname">{{item.nickName || '玩家'}}</text>
+          <text class="mock-tag" wx:if="{{item.isMock}}">模拟</text>
+          <text class="ready-tag" wx:if="{{item.isReady}}">已准备</text>
+          <text class="ready-tag pending" wx:else>未准备</text>
+          <text class="deal-tag" wx:if="{{item.hasDealt}}">已发牌</text>
+          <text class="deal-tag pending" wx:else>未发牌</text>
+        </view>
+      </block>
     </view>
   </view>
 
   <view class="self-block" wx:if="{{selfPlayer}}">
+    <view class="self-seat-base"></view>
     <image class="self-avatar {{selfPlayer.hasDealt ? 'avatar-dealt' : (selfPlayer.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{selfPlayer.avatarUrl || defaultAvatar}}" mode="aspectFill" />
     <text class="self-nickname">{{selfPlayer.nickName || '我'}}</text>
     <text class="ready-tag self-ready" wx:if="{{selfPlayer.isReady}}">已准备</text>
@@ -32,7 +70,7 @@
     <view wx:if="{{selfPlayer.card}}" class="self-card-row">
       <text class="self-hand-label">手牌：</text>
       <view class="poker-card">
-        <text class="poker-card-text">{{selfPlayer.card.text || selfPlayer.card}}</text>
+        <text class="poker-card-text {{selfCardColorClass}}">{{selfPlayer.card.text || selfPlayer.card}}</text>
       </view>
     </view>
     <text class="self-hand-card placeholder" wx:else>手牌：未发牌</text>

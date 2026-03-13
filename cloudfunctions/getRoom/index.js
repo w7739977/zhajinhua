@@ -25,6 +25,7 @@ exports.main = async (event) => {
       ok: true,
       room: {
         roomId: room.roomId,
+        ownerOpenId: room.ownerOpenId || '',
         players: room.players || [],
         publicCard: room.publicCard || null,
         status: room.status || 'waiting'

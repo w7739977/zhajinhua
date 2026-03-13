@@ -16,15 +16,25 @@ function normalizePlayers(players) {
   }))
 }
 
+function getCardColorClass(card) {
+  const text = typeof card === 'string' ? card : card && card.text
+  if (!text) return ''
+  return text.startsWith('♥') || text.startsWith('♦') ? 'poker-card-text-red' : ''
+}
+
 let roomWatcher = null
 
 Page({
   data: {
     roomId: '',
     isOwner: false,
+    showMockTools: false,
+    mockCount: 0,
     players: [],
     displayPlayers: [],
     otherPlayers: [],
+    leftPlayers: [],
+    rightPlayers: [],
     selfPlayer: null,
     publicCard: null,
     publicCardText: '',
@@ -39,7 +49,11 @@ Page({
   onLoad(options) {
     const roomId = options.roomId || ''
     const isOwner = options.isOwner === '1'
-    this.setData({ roomId, isOwner })
+    this.setData({
+      roomId,
+      isOwner,
+      showMockTools: isOwner
+    })
     this.selfOpenId = app.globalData.openId || ''
     this.isNavigatingToResult = false
     this.readyGuardUntil = 0
@@ -110,6 +124,7 @@ Page({
     const publicCard = room.publicCard || null
     const status = room.status || 'waiting'
     const selfOpenId = this.selfOpenId
+    const showMockTools = !!(this.data.isOwner || (room.ownerOpenId && room.ownerOpenId === selfOpenId))
     const ordered = rotatePlayers(players, selfOpenId).map((p) => ({
       ...p,
       isSelf: p.openId === selfOpenId
@@ -121,7 +136,15 @@ Page({
         ...p,
         card: null
       }))
+    // 其他玩家始终基于入房顺序旋转：
+    // 自己固定在底部，逆时针方向依次排到右侧，再绕到左侧，保证所有客户端顺序一致。
+    const splitIndex = Math.ceil(otherPlayers.length / 2)
+    const rightPlayers = otherPlayers.slice(0, splitIndex).reverse()
+    const leftPlayers = otherPlayers.slice(splitIndex)
     const publicCardText = (publicCard && (typeof publicCard === 'string' ? publicCard : publicCard.text)) || ''
+    const publicCardColorClass = getCardColorClass(publicCard)
+    const selfCardColorClass = getCardColorClass(self && self.card)
+    const mockCount = players.filter((p) => p.isMock === true).length
     const allReady = players.length > 0 && players.every((p) => p.isReady === true)
     const allDealt = players.length > 0 && players.every((p) => p.hasDealt === true)
     const isReady = !!(self && self.isReady === true)
@@ -133,10 +156,16 @@ Page({
       players,
       displayPlayers: ordered,
       otherPlayers,
+      leftPlayers,
+      rightPlayers,
       selfPlayer: self,
       publicCard,
       publicCardText,
+      publicCardColorClass,
+      selfCardColorClass,
       status,
+      showMockTools,
+      mockCount,
       isReady,
       hasDealt,
       canDeal,
@@ -296,5 +325,53 @@ Page({
         wx.hideLoading()
         wx.showToast({ title: '开牌失败', icon: 'none' })
       })
+  },
+
+  runMockAction(action, loadingTitle) {
+    const { roomId, showMockTools } = this.data
+    if (!roomId || !showMockTools) return
+
+    wx.showLoading({ title: loadingTitle, mask: true })
+    wx.cloud
+      .callFunction({
+        name: 'mockRoomAction',
+        data: {
+          roomId,
+          action
+        }
+      })
+      .then((res) => {
+        wx.hideLoading()
+        const result = (res && res.result) || {}
+        if (!result.ok) {
+          wx.showToast({ title: result.message || '测试操作失败', icon: 'none' })
+          return
+        }
+        if (result.room) {
+          this.updateRoomView(result.room)
+        } else {
+          this.fetchRoom()
+        }
+      })
+      .catch(() => {
+        wx.hideLoading()
+        wx.showToast({ title: '测试操作失败', icon: 'none' })
+      })
+  },
+
+  onMockSetup() {
+    this.runMockAction('setupMocks', '添加模拟玩家...')
+  },
+
+  onMockReadyOthers() {
+    this.runMockAction('mockReadyOthers', '模拟准备中...')
+  },
+
+  onMockDealOthers() {
+    this.runMockAction('mockDealOthers', '模拟发牌中...')
+  },
+
+  onMockClear() {
+    this.runMockAction('clearMocks', '清理模拟玩家...')
   }
 })

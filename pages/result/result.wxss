@@ -1,8 +1,15 @@
 .result-page {
   min-height: 100vh;
-  background: #121212;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(110, 231, 183, 0.1), transparent 20%),
+    radial-gradient(circle at 18% 82%, rgba(16, 185, 129, 0.08), transparent 26%),
+    radial-gradient(circle at 82% 18%, rgba(16, 185, 129, 0.08), transparent 24%),
+    linear-gradient(180deg, #163e2f 0%, #0d291f 50%, #081510 100%);
   padding: 32rpx 32rpx 140rpx;
   box-sizing: border-box;
+  box-shadow:
+    inset 0 0 140rpx rgba(0, 0, 0, 0.22),
+    inset 0 0 26rpx rgba(255, 255, 255, 0.02);
 }
 
 .header {
@@ -18,12 +25,23 @@
 .public-card {
   text-align: center;
   margin-bottom: 32rpx;
+  padding: 26rpx 24rpx 30rpx;
+  border-radius: 28rpx;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(110, 231, 183, 0.14), rgba(34, 197, 94, 0.04) 42%, rgba(0, 0, 0, 0) 74%),
+    rgba(7, 22, 17, 0.38);
+  border: 1rpx solid rgba(110, 231, 183, 0.12);
+  box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(6rpx);
 }
 
 .public-label {
   font-size: 24rpx;
-  color: #9ca3af;
-  margin-right: 10rpx;
+  color: rgba(220, 252, 231, 0.78);
+  letter-spacing: 2rpx;
+  margin-right: 0;
+  margin-bottom: 16rpx;
+  display: block;
 }
 
 /* 扑克牌：与房间页统一 */
@@ -37,24 +55,35 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 14rpx 35rpx rgba(0, 0, 0, 0.75);
+  animation: cardReveal 360ms ease-out;
 }
 
 .poker-card-large {
-  width: 80rpx;
-  height: 110rpx;
+  width: 90rpx;
+  height: 126rpx;
+  box-shadow:
+    0 18rpx 40rpx rgba(0, 0, 0, 0.42),
+    0 0 28rpx rgba(255, 255, 255, 0.1);
 }
 
 .poker-card-text {
-  font-size: 24rpx;
+  font-size: 28rpx;
+  font-weight: 600;
   color: #111827;
 }
 
+.poker-card-text-red {
+  color: #dc2626;
+}
+
 .players-list {
-  background: #18181b;
-  border-radius: 16rpx;
+  background: rgba(8, 27, 20, 0.62);
+  border-radius: 22rpx;
   padding: 16rpx 24rpx;
-  box-shadow: 0 18rpx 45rpx rgba(0, 0, 0, 0.85);
+  border: 1rpx solid rgba(110, 231, 183, 0.1);
+  box-shadow: 0 18rpx 45rpx rgba(0, 0, 0, 0.32);
   margin-bottom: 80rpx;
+  backdrop-filter: blur(6rpx);
 }
 
 .player-row {
@@ -108,10 +137,28 @@
   height: 88rpx;
   line-height: 88rpx;
   border-radius: 999rpx;
-  border: none;
-  background: #2563eb;
+  border: 1rpx solid rgba(250, 204, 21, 0.16);
+  background:
+    linear-gradient(180deg, #4ade80 0%, #22c55e 16%, #1c9a50 52%, #137a3e 100%);
   color: #f9fafb;
   font-size: 30rpx;
-  font-weight: 500;
-  box-shadow: 0 18rpx 45rpx rgba(37, 99, 235, 0.8);
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.28);
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.08),
+    inset 0 -10rpx 16rpx rgba(0, 0, 0, 0.12),
+    0 18rpx 45rpx rgba(0, 0, 0, 0.26);
+}
+
+@keyframes cardReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(14rpx) scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

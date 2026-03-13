@@ -1,8 +1,16 @@
 .room-page {
   min-height: 100vh;
   padding: 32rpx 32rpx 180rpx;
-  background: #121212;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(110, 231, 183, 0.12), transparent 20%),
+    radial-gradient(circle at 22% 18%, rgba(16, 185, 129, 0.08), transparent 24%),
+    radial-gradient(circle at 78% 20%, rgba(16, 185, 129, 0.08), transparent 24%),
+    radial-gradient(circle at 50% 100%, rgba(0, 0, 0, 0.36), transparent 40%),
+    linear-gradient(180deg, #163e2f 0%, #0d291f 50%, #081510 100%);
   box-sizing: border-box;
+  box-shadow:
+    inset 0 0 140rpx rgba(0, 0, 0, 0.22),
+    inset 0 0 26rpx rgba(255, 255, 255, 0.02);
 }
 
 .room-header {
@@ -29,18 +37,129 @@
   box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.6);
 }
 
-.other-players {
+.mock-panel {
+  margin-bottom: 28rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: rgba(8, 27, 20, 0.72);
+  border: 1rpx solid rgba(110, 231, 183, 0.12);
+  box-shadow: 0 16rpx 36rpx rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(8rpx);
+}
+
+.mock-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 18rpx;
+}
+
+.mock-panel-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.mock-panel-meta {
+  font-size: 22rpx;
+  color: #93c5fd;
+}
+
+.mock-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 24rpx;
+  gap: 16rpx;
+}
+
+.mock-btn {
+  width: calc(50% - 8rpx);
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(59, 130, 246, 0.2);
+  background: rgba(37, 99, 235, 0.12);
+  color: #dbeafe;
+  font-size: 24rpx;
+  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.28);
+}
+
+.mock-btn.danger {
+  border-color: rgba(248, 113, 113, 0.2);
+  background: rgba(127, 29, 29, 0.22);
+  color: #fecaca;
+}
+
+.table-stage {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
   margin-bottom: 32rpx;
+  min-height: 520rpx;
+}
+
+.side-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22rpx;
+}
+
+.left-column {
+  align-items: flex-start;
+}
+
+.right-column {
+  align-items: flex-end;
+}
+
+.center-zone {
+  position: relative;
+  width: 250rpx;
+  min-height: 360rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx;
+  border-radius: 999rpx;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(110, 231, 183, 0.16), rgba(34, 197, 94, 0.05) 42%, rgba(0, 0, 0, 0) 72%),
+    radial-gradient(circle at 50% 50%, rgba(5, 46, 22, 0.42), rgba(2, 6, 23, 0.08) 72%);
+  box-shadow:
+    inset 0 0 40rpx rgba(16, 185, 129, 0.08),
+    0 14rpx 40rpx rgba(0, 0, 0, 0.18);
+}
+
+.center-zone::after {
+  content: '';
+  position: absolute;
+  inset: 18rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid rgba(220, 252, 231, 0.06);
 }
 
 .other-player-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 150rpx;
+  padding: 22rpx 8rpx 16rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.04),
+    0 10rpx 24rpx rgba(0, 0, 0, 0.12);
+}
+
+.left-column .other-player-item {
+  align-self: flex-start;
+}
+
+.right-column .other-player-item {
+  align-self: flex-end;
 }
 
 .other-player-item .avatar {
@@ -52,22 +171,57 @@
   box-shadow: 0 0 0 4rpx rgba(255, 255, 255, 0.02);
 }
 
+.seat-base {
+  position: absolute;
+  left: 50%;
+  bottom: 10rpx;
+  transform: translateX(-50%);
+  width: 92rpx;
+  height: 16rpx;
+  border-radius: 999rpx;
+  background: radial-gradient(circle at 50% 50%, rgba(12, 18, 16, 0.42), rgba(12, 18, 16, 0.02) 78%);
+  filter: blur(2rpx);
+}
+
 .other-player-item .nickname {
   margin-top: 6rpx;
   font-size: 22rpx;
   color: #9ca3af;
+  max-width: 100%;
+  line-height: 1.35;
+  text-align: center;
+  word-break: break-all;
 }
 
 .center-card {
   text-align: center;
-  margin-bottom: 40rpx;
-  min-height: 80rpx;
+  width: 100%;
+  min-height: 210rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 28rpx;
+  background: rgba(6, 20, 15, 0.26);
+  border: 1rpx solid rgba(110, 231, 183, 0.1);
+  box-shadow:
+    inset 0 0 24rpx rgba(255, 255, 255, 0.02),
+    0 12rpx 28rpx rgba(0, 0, 0, 0.14);
+}
+
+.card-placeholder {
+  width: 100%;
+  min-height: 210rpx;
+  border-radius: 24rpx;
+  background: rgba(7, 21, 16, 0.22);
+  border: 1rpx dashed rgba(110, 231, 183, 0.18);
 }
 
 .center-card-label {
   font-size: 24rpx;
-  color: #6b7280;
-  margin-bottom: 12rpx;
+  color: rgba(220, 252, 231, 0.78);
+  letter-spacing: 2rpx;
+  margin-bottom: 18rpx;
   display: block;
 }
 
@@ -82,18 +236,27 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 14rpx 35rpx rgba(0, 0, 0, 0.75);
+  animation: cardReveal 360ms ease-out;
 }
 
 .poker-card-large {
-  width: 80rpx;
-  height: 110rpx;
+  width: 90rpx;
+  height: 126rpx;
   display: inline-flex;
-  margin-left: 8rpx;
+  margin-left: 0;
+  box-shadow:
+    0 18rpx 40rpx rgba(0, 0, 0, 0.42),
+    0 0 28rpx rgba(255, 255, 255, 0.1);
 }
 
 .poker-card-text {
-  font-size: 24rpx;
+  font-size: 28rpx;
+  font-weight: 600;
   color: #111827;
+}
+
+.poker-card-text-red {
+  color: #dc2626;
 }
 
 .self-block {
@@ -101,9 +264,27 @@
   left: 50%;
   transform: translateX(-50%);
   bottom: 150rpx;
+  min-width: 240rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 16rpx 28rpx 20rpx;
+  border-radius: 28rpx;
+  background: rgba(8, 27, 20, 0.48);
+  border: 1rpx solid rgba(110, 231, 183, 0.1);
+  box-shadow: 0 18rpx 44rpx rgba(0, 0, 0, 0.2);
+}
+
+.self-seat-base {
+  position: absolute;
+  left: 50%;
+  bottom: 10rpx;
+  transform: translateX(-50%);
+  width: 130rpx;
+  height: 20rpx;
+  border-radius: 999rpx;
+  background: radial-gradient(circle at 50% 50%, rgba(12, 18, 16, 0.54), rgba(12, 18, 16, 0.02) 82%);
+  filter: blur(3rpx);
 }
 
 
@@ -143,6 +324,10 @@
   gap: 8rpx;
 }
 
+.self-card-row .poker-card {
+  animation-duration: 420ms;
+}
+
 .self-hand-label {
   font-size: 24rpx;
   color: #9ca3af;
@@ -162,9 +347,18 @@
   left: 32rpx;
   right: 32rpx;
   bottom: 40rpx;
+  padding: 18rpx 18rpx 20rpx;
+  border-radius: 999rpx;
   display: flex;
   justify-content: space-between;
   gap: 16rpx;
+  background:
+    linear-gradient(180deg, rgba(18, 45, 34, 0.72) 0%, rgba(7, 20, 15, 0.84) 100%);
+  border: 1rpx solid rgba(220, 252, 231, 0.08);
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.06),
+    0 16rpx 36rpx rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(8rpx);
 }
 
 .btn {
@@ -172,28 +366,39 @@
   height: 88rpx;
   line-height: 88rpx;
   border-radius: 999rpx;
-  border: none;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
   font-size: 28rpx;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 1rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 18rpx 40rpx rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.28);
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.08),
+    inset 0 -8rpx 14rpx rgba(0, 0, 0, 0.12),
+    0 12rpx 28rpx rgba(0, 0, 0, 0.28);
 }
 
 .btn-primary {
-  background: #2563eb;
+  background:
+    linear-gradient(180deg, #4ade80 0%, #22c55e 14%, #1d9d52 48%, #137a3e 100%);
+  border-color: rgba(220, 252, 231, 0.18);
   color: #f9fafb;
 }
 
 .btn-secondary {
-  background: #27272a;
-  color: #e5e7eb;
+  background:
+    linear-gradient(180deg, rgba(44, 56, 50, 0.96) 0%, rgba(22, 30, 27, 0.98) 100%);
+  border-color: rgba(250, 204, 21, 0.14);
+  color: #f3f4f6;
 }
 
 .btn[disabled] {
-  opacity: 0.35;
-  box-shadow: none;
+  opacity: 0.42;
+  box-shadow:
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.04),
+    inset 0 -6rpx 10rpx rgba(0, 0, 0, 0.1);
 }
 
 
@@ -225,6 +430,15 @@
   color: #6b7280;
 }
 
+.mock-tag {
+  margin-top: 6rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(168, 85, 247, 0.14);
+  color: #d8b4fe;
+  font-size: 18rpx;
+}
+
 .self-ready {
   margin-top: 8rpx;
 }
@@ -236,4 +450,16 @@
 .bottom-bar-three .btn {
   width: 31%;
   font-size: 26rpx;
+}
+
+@keyframes cardReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(14rpx) scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

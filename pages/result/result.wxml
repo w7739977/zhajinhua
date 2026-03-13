@@ -6,7 +6,7 @@
   <view class="public-card" wx:if="{{publicCard}}">
     <text class="public-label">公牌：</text>
     <view class="poker-card poker-card-large">
-      <text class="poker-card-text">{{publicCard.text || publicCard}}</text>
+      <text class="poker-card-text {{publicCardColorClass}}">{{publicCard.text || publicCard}}</text>
     </view>
   </view>
 
@@ -19,7 +19,7 @@
           <view class="card" wx:if="{{item.card}}">
             <text class="card-label">手牌：</text>
             <view class="poker-card">
-              <text class="poker-card-text">{{item.card.text || item.card}}</text>
+              <text class="poker-card-text {{item.cardColorClass}}">{{item.card.text || item.card}}</text>
             </view>
           </view>
           <text class="card placeholder" wx:else>手牌：未发牌</text>
