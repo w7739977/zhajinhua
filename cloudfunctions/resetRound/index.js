@@ -41,19 +41,38 @@ exports.main = async (event) => {
     }
 
     const room = roomRes.data[0]
-    const players = (room.players || []).map((p) => ({
-      ...p,
-      card: null,
-      hasDealt: false
-    }))
+    const players = room.players || []
+    const alreadyReset =
+      ['waiting', 'ready'].includes(room.status || 'waiting') &&
+      !room.publicCard &&
+      players.every((p) => !p.card && !p.hasDealt)
 
+    if (alreadyReset) {
+      return {
+        ok: true,
+        room: {
+          roomId: room.roomId,
+          players,
+          publicCard: null,
+          status: room.status || 'waiting'
+        }
+      }
+    }
+
+    const nextPlayers = players.map((p) => ({
+      ...p,
+      isReady: false,
+      hasDealt: false,
+      card: null
+    }))
     const deck = shuffle(createDeck())
 
     await rooms.doc(room._id).update({
       data: {
         deck,
-        players,
+        players: nextPlayers,
         publicCard: null,
+        status: 'waiting',
         updatedAt: db.serverDate()
       }
     })
@@ -62,8 +81,9 @@ exports.main = async (event) => {
       ok: true,
       room: {
         roomId: room.roomId,
-        players,
-        publicCard: null
+        players: nextPlayers,
+        publicCard: null,
+        status: 'waiting'
       }
     }
   } catch (err) {

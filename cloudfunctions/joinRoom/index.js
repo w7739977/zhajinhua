@@ -7,7 +7,7 @@ cloud.init({
 const db = cloud.database()
 const rooms = db.collection('rooms')
 
-exports.main = async (event, context) => {
+exports.main = async (event) => {
   try {
     const wxContext = cloud.getWXContext()
     const openId = wxContext.OPENID
@@ -20,11 +20,7 @@ exports.main = async (event, context) => {
       return { ok: false, code: 'ROOM_ID_EMPTY', message: '房间号为空' }
     }
 
-    const roomRes = await rooms
-      .where({ roomId })
-      .limit(1)
-      .get()
-
+    const roomRes = await rooms.where({ roomId }).limit(1).get()
     if (!roomRes.data.length) {
       return { ok: false, code: 'ROOM_NOT_FOUND', message: '房间不存在' }
     }
@@ -38,6 +34,7 @@ exports.main = async (event, context) => {
         openId,
         nickName,
         avatarUrl,
+        isReady: false,
         hasDealt: false,
         card: null
       })
@@ -49,11 +46,11 @@ exports.main = async (event, context) => {
     await rooms.doc(room._id).update({
       data: {
         players,
+        status: 'waiting',
         updatedAt: db.serverDate()
       }
     })
 
-    // 只返回可序列化字段，避免 _id/Date 等导致前端收不到数据
     return {
       ok: true,
       openId,
@@ -61,7 +58,7 @@ exports.main = async (event, context) => {
         roomId: room.roomId,
         players,
         publicCard: room.publicCard || null,
-        status: room.status || 'waiting'
+        status: 'waiting'
       }
     }
   } catch (err) {
@@ -73,4 +70,3 @@ exports.main = async (event, context) => {
     }
   }
 }
-

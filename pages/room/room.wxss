@@ -48,6 +48,8 @@
   height: 72rpx;
   border-radius: 999rpx;
   background: #27272a;
+  border: 2rpx solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, 0.02);
 }
 
 .other-player-item .nickname {
@@ -110,7 +112,22 @@
   height: 100rpx;
   border-radius: 999rpx;
   background: #27272a;
-  border: 3rpx solid #facc15;
+  border: 3rpx solid rgba(255, 255, 255, 0.08);
+}
+
+.avatar-pending {
+  border-color: rgba(107, 114, 128, 0.45) !important;
+  box-shadow: 0 0 0 6rpx rgba(107, 114, 128, 0.08);
+}
+
+.avatar-ready {
+  border-color: rgba(96, 165, 250, 0.85) !important;
+  box-shadow: 0 0 0 6rpx rgba(37, 99, 235, 0.14);
+}
+
+.avatar-dealt {
+  border-color: rgba(52, 211, 153, 0.92) !important;
+  box-shadow: 0 0 0 6rpx rgba(16, 185, 129, 0.16);
 }
 
 .self-nickname {
@@ -177,4 +194,46 @@
 .btn[disabled] {
   opacity: 0.35;
   box-shadow: none;
+}
+
+
+.ready-tag {
+  margin-top: 8rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+  font-size: 20rpx;
+}
+
+.ready-tag.pending {
+  background: rgba(107, 114, 128, 0.16);
+  color: #9ca3af;
+}
+
+.deal-tag {
+  margin-top: 6rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(37, 99, 235, 0.16);
+  color: #93c5fd;
+  font-size: 20rpx;
+}
+
+.deal-tag.pending {
+  background: rgba(107, 114, 128, 0.12);
+  color: #6b7280;
+}
+
+.self-ready {
+  margin-top: 8rpx;
+}
+
+.bottom-bar-three {
+  gap: 12rpx;
+}
+
+.bottom-bar-three .btn {
+  width: 31%;
+  font-size: 26rpx;
 }

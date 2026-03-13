@@ -7,7 +7,6 @@ cloud.init({
 const db = cloud.database()
 const rooms = db.collection('rooms')
 
-// 牌只存字符串，避免云库对嵌套对象字段（rank/face 等）报错
 function createDeck() {
   const suits = ['♠', '♥', '♣', '♦']
   const faces = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
@@ -38,17 +37,15 @@ async function generateRoomId() {
   throw new Error('生成房间号失败')
 }
 
-exports.main = async (event, context) => {
+exports.main = async (event) => {
   try {
     const wxContext = cloud.getWXContext()
     const openId = wxContext.OPENID
 
     const nickName = event.nickName || '玩家'
     const avatarUrl = event.avatarUrl || ''
-
     const roomId = await generateRoomId()
     const deck = shuffle(createDeck())
-
     const now = db.serverDate()
 
     const roomDoc = {
@@ -62,6 +59,7 @@ exports.main = async (event, context) => {
           openId,
           nickName,
           avatarUrl,
+          isReady: false,
           hasDealt: false,
           card: null
         }
@@ -70,11 +68,8 @@ exports.main = async (event, context) => {
       updatedAt: now
     }
 
-    await rooms.add({
-      data: roomDoc
-    })
+    await rooms.add({ data: roomDoc })
 
-    // 只返回可序列化字段，避免 serverDate 等导致前端收不到数据
     return {
       ok: true,
       roomId,

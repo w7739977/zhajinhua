@@ -4,11 +4,19 @@ function rotatePlayers(players, selfOpenId) {
   if (!selfOpenId) return players
   const idx = players.findIndex((p) => p.openId === selfOpenId)
   if (idx === -1) return players
-  const ordered = players.slice(idx + 1).concat(players.slice(0, idx + 1))
-  return ordered
+  return players.slice(idx + 1).concat(players.slice(0, idx + 1))
 }
 
-let roomWatcher = null;
+function normalizePlayers(players) {
+  return (players || []).map((p) => ({
+    ...p,
+    isReady: p && p.isReady === true,
+    hasDealt: p && p.hasDealt === true,
+    card: p && p.card ? p.card : null
+  }))
+}
+
+let roomWatcher = null
 
 Page({
   data: {
@@ -20,7 +28,10 @@ Page({
     selfPlayer: null,
     publicCard: null,
     publicCardText: '',
+    status: 'waiting',
+    isReady: false,
     hasDealt: false,
+    canDeal: false,
     canOpen: false,
     defaultAvatar: ''
   },
@@ -30,16 +41,20 @@ Page({
     const isOwner = options.isOwner === '1'
     this.setData({ roomId, isOwner })
     this.selfOpenId = app.globalData.openId || ''
+    this.isNavigatingToResult = false
+    this.readyGuardUntil = 0
   },
 
   onShow() {
     const roomId = this.data.roomId
     if (!roomId) return
+    // 防止从上一页跳转进入房间时，点击穿透误触“准备”按钮
+    this.readyGuardUntil = Date.now() + 1200
 
     const needReset = wx.getStorageSync('roomNeedResetRound')
     if (needReset) {
       wx.removeStorageSync('roomNeedResetRound')
-      wx.showLoading({ title: '新一局...', mask: true })
+      wx.showLoading({ title: '等待准备...', mask: true })
       wx.cloud
         .callFunction({
           name: 'resetRound',
@@ -48,15 +63,17 @@ Page({
         .then((res) => {
           wx.hideLoading()
           const result = (res && res.result) || {}
-          if (result.ok !== true) {
-            wx.showToast({ title: result.message || '新一局失败', icon: 'none' })
+          if (!result.ok) {
+            wx.showToast({ title: result.message || '重置失败', icon: 'none' })
           }
           this.fetchRoom()
+          this.initRoomWatcher()
         })
         .catch(() => {
           wx.hideLoading()
-          wx.showToast({ title: '新一局失败', icon: 'none' })
+          wx.showToast({ title: '重置失败', icon: 'none' })
           this.fetchRoom()
+          this.initRoomWatcher()
         })
       return
     }
@@ -65,17 +82,15 @@ Page({
     this.initRoomWatcher()
   },
 
-  updateRoomView(room) {
-    if (!room) return
-    const players = room.players || []
-    const publicCard = room.publicCard || null
+  onHide() {
+    this.closeRoomWatcher()
+  },
 
-    const selfOpenId = this.selfOpenId
-    const ordered = rotatePlayers(players, selfOpenId).map((p) => ({
-      ...p,
-      isSelf: p.openId === selfOpenId
-    }))
+  onUnload() {
+    this.closeRoomWatcher()
+  },
 
+  buildSelf(players, selfOpenId) {
     const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || null
     let self = players.find((p) => p.openId === selfOpenId)
     if (self && userInfo) {
@@ -85,21 +100,64 @@ Page({
         avatarUrl: userInfo.avatarUrl || self.avatarUrl
       }
     }
+    return self || null
+  },
 
+  updateRoomView(room) {
+    if (!room) return
+
+    const players = normalizePlayers(room.players)
+    const publicCard = room.publicCard || null
+    const status = room.status || 'waiting'
+    const selfOpenId = this.selfOpenId
+    const ordered = rotatePlayers(players, selfOpenId).map((p) => ({
+      ...p,
+      isSelf: p.openId === selfOpenId
+    }))
+    const self = this.buildSelf(players, selfOpenId)
+    const otherPlayers = ordered
+      .filter((p) => !p.isSelf)
+      .map((p) => ({
+        ...p,
+        card: null
+      }))
     const publicCardText = (publicCard && (typeof publicCard === 'string' ? publicCard : publicCard.text)) || ''
-    const otherPlayers = ordered.filter((p) => !p.isSelf)
-    const canOpen = players.length > 0 && players.every((p) => p.hasDealt)
+    const allReady = players.length > 0 && players.every((p) => p.isReady === true)
+    const allDealt = players.length > 0 && players.every((p) => p.hasDealt === true)
+    const isReady = !!(self && self.isReady === true)
+    const hasDealt = !!(self && self.hasDealt === true)
+    const canDeal = allReady && !hasDealt && status !== 'opened'
+    const canOpen = allDealt && status === 'dealing'
 
     this.setData({
       players,
       displayPlayers: ordered,
       otherPlayers,
-      selfPlayer: self || null,
+      selfPlayer: self,
       publicCard,
       publicCardText,
-      hasDealt: !!(self && self.hasDealt),
+      status,
+      isReady,
+      hasDealt,
+      canDeal,
       canOpen
     })
+
+    if (status !== 'opened') {
+      this.isNavigatingToResult = false
+    }
+
+    if (status === 'opened' && !this.isNavigatingToResult) {
+      this.isNavigatingToResult = true
+      const data = {
+        roomId: room.roomId,
+        players,
+        publicCard
+      }
+      wx.navigateTo({
+        url: `/pages/result/result?data=${encodeURIComponent(JSON.stringify(data))}`
+      })
+    }
   },
 
   initRoomWatcher() {
@@ -112,8 +170,7 @@ Page({
         onChange: (snapshot) => {
           const docs = snapshot.docs || []
           if (!docs.length) return
-          const room = docs[0]
-          this.updateRoomView(room)
+          this.updateRoomView(docs[0])
         },
         onError: (err) => {
           console.error('room watch error', err)
@@ -141,11 +198,10 @@ Page({
       wx.hideLoading()
       const result = res.result || {}
       if (!result.ok) {
-        wx.showToast({ title: '房间不存在', icon: 'none' })
+        wx.showToast({ title: result.message || '房间不存在', icon: 'none' })
         return
       }
-      const room = result.room
-      this.updateRoomView(room)
+      this.updateRoomView(result.room)
     } catch (e) {
       wx.hideLoading()
       wx.showToast({ title: '加载失败', icon: 'none' })
@@ -160,23 +216,37 @@ Page({
     }
   },
 
-  onHide() {
-    this.closeRoomWatcher()
-  },
+  onReady() {
+    const { roomId, isReady } = this.data
+    if (!roomId || isReady) return
+    if (Date.now() < this.readyGuardUntil) return
 
-  onUnload() {
-    this.closeRoomWatcher()
+    wx.showLoading({ title: '准备中...', mask: true })
+    wx.cloud
+      .callFunction({
+        name: 'ready',
+        data: { roomId }
+      })
+      .then((res) => {
+        wx.hideLoading()
+        const result = (res && res.result) || {}
+        if (!result.ok) {
+          wx.showToast({ title: result.message || '准备失败', icon: 'none' })
+          return
+        }
+        if (result.room) {
+          this.updateRoomView(result.room)
+        }
+      })
+      .catch(() => {
+        wx.hideLoading()
+        wx.showToast({ title: '准备失败', icon: 'none' })
+      })
   },
 
   onDeal() {
-    const { roomId, hasDealt } = this.data
-    console.log('[onDeal] 点击发牌 roomId=', roomId, 'hasDealt=', hasDealt)
-
-    if (hasDealt) return
-    if (!roomId) {
-      wx.showToast({ title: '房间号为空', icon: 'none' })
-      return
-    }
+    const { roomId, canDeal } = this.data
+    if (!canDeal || !roomId) return
 
     wx.showLoading({ title: '发牌中...', mask: true })
     wx.cloud
@@ -186,80 +256,45 @@ Page({
       })
       .then((res) => {
         wx.hideLoading()
-        try {
-          console.log('[onDeal] 云函数完整响应:', res)
-          const result = res && res.result
-          if (result === undefined || result === null) {
-            console.error('[onDeal] result 为空 res=', res)
-            wx.showToast({ title: '发牌异常: 无返回数据', icon: 'none' })
-            return
-          }
-          if (result.errCode !== undefined && result.errCode !== 0) {
-            console.error('[onDeal] 云函数错误:', result)
-            wx.showToast({ title: (result.errMsg || '发牌失败').slice(0, 20), icon: 'none' })
-            return
-          }
-          if (!result.ok) {
-            const msg = result.message || result.code || '发牌失败'
-            if (result.code === 'DECK_EMPTY') {
-              wx.showToast({ title: '牌已经发完', icon: 'none' })
-            } else if (result.code === 'PLAYER_NOT_IN_ROOM') {
-              wx.showToast({ title: '未在房间内，请重新进入', icon: 'none' })
-            } else {
-              wx.showToast({ title: msg.slice(0, 20), icon: 'none' })
-            }
-            return
-          }
-          const room = result.room
-          this.updateRoomView(room)
-        } catch (err) {
-          console.error('[onDeal] then 内异常:', err)
-          wx.showToast({ title: '发牌解析异常', icon: 'none' })
+        const result = (res && res.result) || {}
+        if (!result.ok) {
+          wx.showToast({ title: result.message || '发牌失败', icon: 'none' })
+          return
+        }
+        if (result.currentOpenId && !this.selfOpenId) {
+          this.selfOpenId = result.currentOpenId
+          app.globalData.openId = result.currentOpenId
+        }
+        if (result.room) {
+          this.updateRoomView(result.room)
         }
       })
-      .catch((e) => {
+      .catch(() => {
         wx.hideLoading()
-        const errMsg = (e && e.errMsg) ? e.errMsg : (e && e.message) ? e.message : String(e)
-        console.error('[onDeal] 调用异常:', errMsg, e)
-        wx.showToast({
-          title: errMsg.length > 18 ? errMsg.slice(0, 18) + '…' : errMsg || '发牌失败',
-          icon: 'none',
-          duration: 3000
-        })
+        wx.showToast({ title: '发牌失败', icon: 'none' })
       })
   },
 
   onOpen() {
-    const { roomId } = this.data
-    if (!roomId) return
+    const { roomId, canOpen } = this.data
+    if (!canOpen || !roomId) return
 
-    wx.showLoading({ title: '加载中...', mask: true })
+    wx.showLoading({ title: '开牌中...', mask: true })
     wx.cloud
       .callFunction({
-        name: 'getRoom',
+        name: 'open',
         data: { roomId }
       })
       .then((res) => {
         wx.hideLoading()
-        const result = res.result || {}
+        const result = (res && res.result) || {}
         if (!result.ok) {
-          wx.showToast({ title: '房间不存在', icon: 'none' })
-          return
+          wx.showToast({ title: result.message || '开牌失败', icon: 'none' })
         }
-        const room = result.room
-        const data = {
-          roomId: room.roomId,
-          players: room.players || [],
-          publicCard: room.publicCard || null
-        }
-        wx.navigateTo({
-          url: `/pages/result/result?data=${encodeURIComponent(JSON.stringify(data))}`
-        })
       })
       .catch(() => {
         wx.hideLoading()
-        wx.showToast({ title: '加载失败', icon: 'none' })
+        wx.showToast({ title: '开牌失败', icon: 'none' })
       })
   }
 })
-

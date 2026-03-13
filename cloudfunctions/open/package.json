@@ -1,0 +1,9 @@
+{
+  "name": "open",
+  "version": "1.0.0",
+  "description": "开牌并同步跳结果页",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

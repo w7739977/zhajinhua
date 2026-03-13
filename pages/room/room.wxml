@@ -7,8 +7,12 @@
   <view class="other-players" wx:if="{{otherPlayers.length > 0}}">
     <block wx:for="{{otherPlayers}}" wx:key="openId">
       <view class="other-player-item">
-        <image class="avatar" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+        <image class="avatar {{item.hasDealt ? 'avatar-dealt' : (item.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
         <text class="nickname">{{item.nickName || '玩家'}}</text>
+        <text class="ready-tag" wx:if="{{item.isReady}}">已准备</text>
+        <text class="ready-tag pending" wx:else>未准备</text>
+        <text class="deal-tag" wx:if="{{item.hasDealt}}">已发牌</text>
+        <text class="deal-tag pending" wx:else>未发牌</text>
       </view>
     </block>
   </view>
@@ -21,8 +25,10 @@
   </view>
 
   <view class="self-block" wx:if="{{selfPlayer}}">
-    <image class="self-avatar" src="{{selfPlayer.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+    <image class="self-avatar {{selfPlayer.hasDealt ? 'avatar-dealt' : (selfPlayer.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{selfPlayer.avatarUrl || defaultAvatar}}" mode="aspectFill" />
     <text class="self-nickname">{{selfPlayer.nickName || '我'}}</text>
+    <text class="ready-tag self-ready" wx:if="{{selfPlayer.isReady}}">已准备</text>
+    <text class="ready-tag pending self-ready" wx:else>未准备</text>
     <view wx:if="{{selfPlayer.card}}" class="self-card-row">
       <text class="self-hand-label">手牌：</text>
       <view class="poker-card">
@@ -32,8 +38,9 @@
     <text class="self-hand-card placeholder" wx:else>手牌：未发牌</text>
   </view>
 
-  <view class="bottom-bar">
-    <button class="btn btn-primary" bindtap="onDeal" disabled="{{hasDealt}}">发牌</button>
+  <view class="bottom-bar bottom-bar-three">
+    <button class="btn btn-secondary" bindtap="onReady" disabled="{{isReady}}">{{isReady ? '已准备' : '准备'}}</button>
+    <button class="btn btn-primary" bindtap="onDeal" disabled="{{!canDeal}}">发牌</button>
     <button class="btn btn-secondary" bindtap="onOpen" disabled="{{!canOpen}}">开牌</button>
   </view>
 </view>

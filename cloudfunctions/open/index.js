@@ -10,7 +10,6 @@ const rooms = db.collection('rooms')
 exports.main = async (event) => {
   try {
     const roomId = String(event.roomId || '').trim()
-
     if (!roomId) {
       return { ok: false, code: 'ROOM_ID_EMPTY', message: '房间号为空' }
     }
@@ -21,21 +20,26 @@ exports.main = async (event) => {
     }
 
     const room = roomRes.data[0]
-    return {
-      ok: true,
-      room: {
-        roomId: room.roomId,
-        players: room.players || [],
-        publicCard: room.publicCard || null,
-        status: room.status || 'waiting'
-      }
+    const players = room.players || []
+    const allDealt = players.length > 0 && players.every((p) => p.hasDealt)
+    if (!allDealt) {
+      return { ok: false, code: 'NOT_ALL_DEALT', message: '未全部发牌' }
     }
+
+    await rooms.doc(room._id).update({
+      data: {
+        status: 'opened',
+        updatedAt: db.serverDate()
+      }
+    })
+
+    return { ok: true }
   } catch (err) {
-    console.error('getRoom error:', err)
+    console.error('open error:', err)
     return {
       ok: false,
-      code: 'GET_ROOM_FAILED',
-      message: err.message || '获取房间失败'
+      code: 'OPEN_FAILED',
+      message: err.message || '开牌失败'
     }
   }
 }
