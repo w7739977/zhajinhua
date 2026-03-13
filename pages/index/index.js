@@ -3,16 +3,30 @@ const app = getApp()
 Page({
   data: {
     joinRoomId: '',
-    showJoinInput: false
+    showJoinInput: false,
+    showAuthModal: true,
+    authorizedUserInfo: null,
+    customNickName: ''
+  },
+
+  onLoad() {
+    const savedUserInfo = wx.getStorageSync('userInfo') || null
+    if (savedUserInfo) {
+      app.globalData.userInfo = savedUserInfo
+      this.setData({
+        authorizedUserInfo: savedUserInfo,
+        showAuthModal: false
+      })
+    }
   },
 
   getUserProfile() {
     wx.getUserProfile({
       desc: '用于展示头像和昵称',
       success: (res) => {
-        app.globalData.userInfo = res.userInfo
-        wx.setStorageSync('userInfo', res.userInfo)
-        wx.showToast({ title: '授权成功', icon: 'success' })
+        this.setData({
+          authorizedUserInfo: res.userInfo
+        })
       },
       fail: () => {
         wx.showToast({ title: '未授权将无法显示头像昵称', icon: 'none' })
@@ -20,11 +34,38 @@ Page({
     })
   },
 
+  onNicknameInput(e) {
+    this.setData({
+      customNickName: (e.detail.value || '').trim()
+    })
+  },
+
+  onConfirmProfile() {
+    const authorizedUserInfo = this.data.authorizedUserInfo
+    if (!authorizedUserInfo) {
+      wx.showToast({ title: '请先同意授权', icon: 'none' })
+      return
+    }
+
+    const finalUserInfo = {
+      ...authorizedUserInfo,
+      nickName: this.data.customNickName || authorizedUserInfo.nickName || '玩家'
+    }
+
+    app.globalData.userInfo = finalUserInfo
+    wx.setStorageSync('userInfo', finalUserInfo)
+    this.setData({
+      showAuthModal: false
+    })
+    wx.showToast({ title: '已确认昵称头像', icon: 'success' })
+  },
+
   onRoomIdInput(e) {
     this.setData({ joinRoomId: e.detail.value.trim() })
   },
 
   async onCreateRoom() {
+    if (this.data.showAuthModal) return
     try {
       wx.showLoading({ title: '创建中...', mask: true })
       const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo') || {}
@@ -80,6 +121,7 @@ Page({
   },
 
   onJoinRoom() {
+    if (this.data.showAuthModal) return
     // 第一次点击时只展开输入框
     if (!this.data.showJoinInput) {
       this.setData({ showJoinInput: true })
@@ -88,6 +130,7 @@ Page({
   },
 
   async onConfirmJoin() {
+    if (this.data.showAuthModal) return
     const roomId = this.data.joinRoomId
     if (!roomId) {
       wx.showToast({ title: '请输入房间号', icon: 'none' })

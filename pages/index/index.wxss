@@ -31,6 +31,10 @@
   margin-top: 8rpx;
 }
 
+.action-panel {
+  width: 100%;
+}
+
 .room-input {
   width: 100%;
   padding: 24rpx 28rpx;
@@ -89,4 +93,71 @@
 
 .user-btn {
   margin-top: 40rpx;
+}
+
+.auth-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.auth-modal {
+  width: 100%;
+  background: #18181b;
+  border: 1rpx solid #3f3f46;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx 28rpx;
+  box-sizing: border-box;
+  box-shadow: 0 30rpx 70rpx rgba(0, 0, 0, 0.55);
+}
+
+.auth-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #f9fafb;
+  text-align: center;
+}
+
+.auth-desc {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.profile-preview {
+  margin: 28rpx 0 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-avatar {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 999rpx;
+  border: 3rpx solid rgba(37, 99, 235, 0.8);
+  background: #27272a;
+}
+
+.profile-name {
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  color: #e5e7eb;
+}
+
+.nickname-input {
+  margin: 8rpx 0 24rpx;
+}
+
+.auth-btn {
+  width: 100%;
 }

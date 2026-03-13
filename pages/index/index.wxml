@@ -1,28 +1,45 @@
 <view class="container">
   <view class="title">诈金花</view>
 
-  <button class="btn btn-primary" bindtap="onCreateRoom">创建房间</button>
+  <view class="action-panel" wx:if="{{!showAuthModal}}">
+    <button class="btn btn-primary" bindtap="onCreateRoom">创建房间</button>
 
-  <button class="btn btn-secondary" bindtap="onJoinRoom">加入房间</button>
+    <button class="btn btn-secondary" bindtap="onJoinRoom">加入房间</button>
 
-  <view class="join-wrap" wx:if="{{showJoinInput}}">
-    <input
-      class="room-input"
-      placeholder="请输入房间号"
-      maxlength="10"
-      bindinput="onRoomIdInput"
-      value="{{joinRoomId}}"
-    />
-    <button class="btn btn-primary" bindtap="onConfirmJoin">确认加入</button>
+    <view class="join-wrap" wx:if="{{showJoinInput}}">
+      <input
+        class="room-input"
+        placeholder="请输入房间号"
+        maxlength="10"
+        bindinput="onRoomIdInput"
+        value="{{joinRoomId}}"
+      />
+      <button class="btn btn-primary" bindtap="onConfirmJoin">确认加入</button>
+    </view>
   </view>
 
-  <button
-    class="btn btn-ghost user-btn"
-    open-type="getUserProfile"
-    lang="zh_CN"
-    bindtap="getUserProfile"
-  >
-    授权头像昵称（首次必点）
-  </button>
+  <view class="auth-mask" wx:if="{{showAuthModal}}">
+    <view class="auth-modal">
+      <text class="auth-title">进入前请先确认昵称头像</text>
+      <text class="auth-desc">先授权微信头像昵称，再可选择自定义昵称，确认后才能创建或加入房间。</text>
+
+      <view class="profile-preview" wx:if="{{authorizedUserInfo}}">
+        <image class="profile-avatar" src="{{authorizedUserInfo.avatarUrl}}" mode="aspectFill" />
+        <text class="profile-name">{{authorizedUserInfo.nickName || '微信用户'}}</text>
+      </view>
+
+      <button class="btn btn-primary auth-btn" bindtap="getUserProfile">同意授权并获取头像昵称</button>
+
+      <input
+        class="room-input nickname-input"
+        placeholder="可输入你想展示的昵称"
+        maxlength="12"
+        bindinput="onNicknameInput"
+        value="{{customNickName}}"
+      />
+
+      <button class="btn btn-secondary auth-btn" bindtap="onConfirmProfile">确认并进入大厅</button>
+    </view>
+  </view>
 </view>
 
