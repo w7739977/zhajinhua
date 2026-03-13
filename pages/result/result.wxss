@@ -1,0 +1,109 @@
+.result-page {
+  min-height: 100vh;
+  background: #121212;
+  color: #fff;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.public-card {
+  text-align: center;
+  margin-bottom: 40rpx;
+  font-size: 32rpx;
+}
+
+.public-label {
+  color: #ccc;
+  margin-right: 12rpx;
+}
+
+/* 通用扑克牌样式，较小尺寸 */
+.poker-card {
+  width: 70rpx;
+  height: 100rpx;
+  border-radius: 10rpx;
+  border: 2rpx solid #e0e0e0;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.35);
+}
+
+.poker-card-large {
+  width: 80rpx;
+  height: 110rpx;
+}
+
+.poker-card-text {
+  font-size: 24rpx;
+  color: #222;
+}
+
+.players-list {
+  margin-bottom: 80rpx;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1px solid #333;
+}
+
+.avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #333;
+  margin-right: 20rpx;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-size: 28rpx;
+  margin-bottom: 6rpx;
+}
+
+.card {
+  font-size: 24rpx;
+  color: #ccc;
+}
+
+.card-label {
+  margin-right: 8rpx;
+}
+
+.card.placeholder {
+  color: #666;
+}
+
+.back-btn {
+  position: fixed;
+  left: 10%;
+  right: 10%;
+  bottom: 60rpx;
+}
+
+.back-btn {
+  position: fixed;
+  left: 10%;
+  right: 10%;
+  bottom: 60rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 999rpx;
+  border: none;
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: #ffffff;
+  font-size: 30rpx;
+}

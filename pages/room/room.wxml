@@ -1,0 +1,39 @@
+<view class="room-page">
+  <view class="room-header">
+    <text class="room-id">房间号：{{roomId}}</text>
+    <button class="invite-btn" open-type="share">邀请好友</button>
+  </view>
+
+  <view class="other-players" wx:if="{{otherPlayers.length > 0}}">
+    <block wx:for="{{otherPlayers}}" wx:key="openId">
+      <view class="other-player-item">
+        <image class="avatar" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+        <text class="nickname">{{item.nickName || '玩家'}}</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="center-card" wx:if="{{publicCard !== null && publicCard !== ''}}">
+    <text class="center-card-label">公牌：</text>
+    <view class="poker-card poker-card-large">
+      <text class="poker-card-text">{{publicCardText}}</text>
+    </view>
+  </view>
+
+  <view class="self-block" wx:if="{{selfPlayer}}">
+    <image class="self-avatar" src="{{selfPlayer.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+    <text class="self-nickname">{{selfPlayer.nickName || '我'}}</text>
+    <view wx:if="{{selfPlayer.card}}" class="self-card-row">
+      <text class="self-hand-label">手牌：</text>
+      <view class="poker-card">
+        <text class="poker-card-text">{{selfPlayer.card.text || selfPlayer.card}}</text>
+      </view>
+    </view>
+    <text class="self-hand-card placeholder" wx:else>手牌：未发牌</text>
+  </view>
+
+  <view class="bottom-bar">
+    <button class="btn btn-primary" bindtap="onDeal" disabled="{{hasDealt}}">发牌</button>
+    <button class="btn btn-secondary" bindtap="onOpen" disabled="{{!canOpen}}">开牌</button>
+  </view>
+</view>

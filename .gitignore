@@ -1,0 +1,9 @@
+# WeChat miniapp
+project.private.config.json
+
+# Node dependencies
+cloudfunctions/*/node_modules/
+cloudfunctions/*/package-lock.json
+
+# IDE / OS
+.DS_Store

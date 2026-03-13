@@ -1,0 +1,9 @@
+{
+  "name": "resetRound",
+  "version": "1.0.0",
+  "description": "新一局：清空手牌公牌、重新洗牌",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

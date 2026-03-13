@@ -1,0 +1,70 @@
+.container {
+  min-height: 100vh;
+  background: #121212;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.title {
+  font-size: 52rpx;
+  font-weight: 600;
+  margin-bottom: 80rpx;
+}
+
+.btn {
+  width: 80%;
+  margin-bottom: 30rpx;
+}
+
+.join-wrap {
+  width: 80%;
+  margin-top: 20rpx;
+}
+
+.room-input {
+  width: 100%;
+  padding: 16rpx 24rpx;
+  border-radius: 12rpx;
+  background: #1f1f1f;
+  color: #fff;
+  margin-bottom: 20rpx;
+}
+
+.user-btn {
+  margin-top: 60rpx;
+  background: #333;
+  color: #fff;
+}
+
+
+/* 按钮现代化样式 */
+.btn {
+  width: 80%;
+  margin-bottom: 30rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 999rpx;
+  border: none;
+  font-size: 30rpx;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ffb74d, #ff7043);
+  color: #121212;
+}
+
+.btn-secondary {
+  background: #2d2d2d;
+  color: #ffffff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #bbbbbb;
+  border: 1rpx solid #444;
+}

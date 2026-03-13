@@ -1,0 +1,28 @@
+<view class="container">
+  <view class="title">诈金花</view>
+
+  <button class="btn btn-primary" bindtap="onCreateRoom">创建房间</button>
+
+  <button class="btn btn-secondary" bindtap="onJoinRoom">加入房间</button>
+
+  <view class="join-wrap" wx:if="{{showJoinInput}}">
+    <input
+      class="room-input"
+      placeholder="请输入房间号"
+      maxlength="10"
+      bindinput="onRoomIdInput"
+      value="{{joinRoomId}}"
+    />
+    <button class="btn btn-primary" bindtap="onConfirmJoin">确认加入</button>
+  </view>
+
+  <button
+    class="btn btn-ghost user-btn"
+    open-type="getUserProfile"
+    lang="zh_CN"
+    bindtap="getUserProfile"
+  >
+    授权头像昵称（首次必点）
+  </button>
+</view>
+

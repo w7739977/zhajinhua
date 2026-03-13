@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/room/room",
+    "pages/result/result"
+  ],
+  "window": {
+    "navigationBarTitleText": "诈金花",
+    "navigationBarBackgroundColor": "#1e1e1e",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#121212",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

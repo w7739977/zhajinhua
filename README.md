@@ -1,0 +1,128 @@
+# 诈金花 微信小程序
+
+微信小程序「诈金花」项目，基于微信云开发实现房间创建、加入、发牌、开牌与返回新一局。**功能已基本跑通。**
+
+---
+
+## 项目概况
+
+- **类型**：微信小程序（云开发）
+- **AppID**：`wx1f0b9966cbfebd33`
+- **云开发环境 ID**：`cloud1-2gytrceb3105a929`
+- **技术栈**：小程序原生 + 云函数 + 云数据库（集合 `rooms`）
+
+### 功能概览
+
+| 功能 | 说明 |
+|------|------|
+| 首页 | 创建房间 / 加入房间（点击「加入房间」后弹出输入框）；授权头像昵称；房间号无效时提示 |
+| 房间页 | 房间号；玩家头像逆时针、本人最下；手牌与公牌展示；发牌 / 开牌；邀请好友（转发） |
+| 结果页 | 所有玩家手牌 + 公牌；「返回游戏」回到房间并自动新一局（清空牌、可再次发牌） |
+
+### 牌与规则
+
+- 一副 52 张扑克（♠♥♣♦ × A~K），不含大小王；牌在数据库中**只存字符串**（如 `"♠K"`）。
+- 创建房间时生成并洗牌；每个玩家点「发牌」得一张手牌；全员发完后自动发一张公牌。
+- 点「开牌」进结果页；点「返回游戏」后由房间页执行 `resetRound` 并刷新，可继续发牌。
+
+---
+
+## 当前进度
+
+### 已完成
+
+- [x] 项目基础结构、三页（index / room / result）、云开发与 AppID 配置。
+- [x] 首页：创建房间、加入房间（云函数 `createRoom` / `joinRoom`），房间号校验。
+- [x] 房间页：`getRoom` 拉取数据；逆时针玩家列表、本人置底；手牌与公牌展示；`deal` 发牌；`onShow` 刷新 + 新一局标记处理。
+- [x] 结果页：展示手牌与公牌；「返回游戏」写存储标记后返回，由房间页执行新一局。
+- [x] 云函数：**createRoom**、**joinRoom**、**getRoom**、**deal**、**resetRound**（新一局：清空牌、重洗牌、重置 hasDealt）。
+- [x] 云函数返回仅可序列化字段；牌存字符串避免云库字段限制；deal 返回 `currentOpenId` 便于前端识别自己。
+
+### 待办 / 可选优化
+
+- [ ] 云开发控制台确认集合 `rooms` 存在；云函数需上传并部署（含 **resetRound**）。
+- [ ] 房间页可加轮询或数据库监听，实现多端实时同步。
+- [ ] 上线前收紧 `rooms` 读写权限（仅房间内用户可读写对应数据）。
+
+---
+
+## 今日经验教训
+
+### 云函数
+
+1. **依赖必须安装**  
+   云函数内使用 `wx-server-sdk`，需在各自目录下放 `package.json` 并写依赖，再在开发者工具中对该函数右键「**上传并部署：云端安装依赖**」，否则会报 `Cannot find module 'wx-server-sdk'`。
+
+2. **返回值必须可序列化**  
+   云函数返回给小程序的数据会做序列化，不能包含：
+   - `db.serverDate()`（仅写库时用，不要放进 return）
+   - 文档里的 `_id`、Date 等  
+   否则前端可能收不到有效 `result`。建议只返回业务需要的纯数据（如 `roomId`、`openId`、`room: { roomId, players, publicCard }`）。
+
+3. **云库写入不要用嵌套对象里的敏感字段名**  
+   若在文档中写入 `publicCard: { suit, rank, text }` 或 `face`，可能触发云库报错：`Cannot create field 'rank'/'face' in element { publicCard: null }`。  
+   **做法**：牌在库里只存**字符串**（如 `"♠K"`），手牌与公牌字段均存字符串，前端展示用 `card.text || card` 兼容。
+
+4. **云函数内建议 try/catch**  
+   出错时返回 `{ ok: false, code, message }`，便于前端提示与排查。
+
+### 前端
+
+5. **当前用户 openId**  
+   创建/加入房间后保存 `app.globalData.openId`；`deal` 云函数返回 `currentOpenId`，房间页用其兜底识别「自己」，才能正确显示已发牌状态和手牌。
+
+6. **房间页刷新与「返回游戏」**  
+   从结果页返回时不会重新执行 `onLoad`，只在 `onShow` 里拉数据。新一局逻辑放在**房间页**更稳：结果页点「返回游戏」只写 `wx.setStorageSync('roomNeedResetRound', true)` 再 `navigateBack()`；房间页 `onShow` 里若读到该标记，先清除标记，再调 `resetRound`，成功后 `fetchRoom()` 刷新界面。
+
+7. **公牌/手牌展示**  
+   若公牌为字符串，WXML 里用 `publicCard.text || publicCard` 兼容；房间页用 `publicCardText` 单独存展示文案并在 setData 时赋值，避免绑定异常。手牌需在玩家条目下显式写一行展示 `item.card`，否则只有头像昵称不会显示牌。
+
+---
+
+## 后续步骤（建议顺序）
+
+1. 微信开发者工具打开项目，确认云开发环境为 `cloud1-2gytrceb3105a929`，数据库有集合 `rooms`。
+2. 云函数列表中对 **createRoom**、**joinRoom**、**getRoom**、**deal**、**resetRound** 分别「上传并部署：云端安装依赖」。
+3. 真机/预览：创建房间 → 发牌 → 开牌 → 返回游戏，确认房间页出现「新一局...」并刷新为无牌、发牌可点。
+4. （可选）按「待办 / 可选优化」做实时同步与权限收紧。
+
+---
+
+## 目录结构（简要）
+
+```
+pj_zhajinhua/
+├── app.js / app.json / app.wxss
+├── project.config.json
+├── README.md
+├── pages/
+│   ├── index/          # 大厅：创建/加入房间
+│   ├── room/           # 房间：玩家、手牌公牌、发牌、开牌、邀请；onShow 刷新与新一局
+│   └── result/         # 开牌结果；返回游戏写标记后返回
+└── cloudfunctions/
+    ├── createRoom/     # 创建房间、牌堆存字符串
+    ├── joinRoom/       # 加入房间
+    ├── getRoom/        # 查询房间
+    ├── deal/           # 发牌（含公牌）、返回 currentOpenId
+    └── resetRound/     # 新一局：清空牌、重洗牌
+```
+
+---
+
+## 参考
+
+- 同目录 `NEXT_MINIAPP_SETUP.md`（若存在）可作云开发与项目初始化参考。
+- 微信云开发文档：[https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html](https://developers.weixin.qq.com/miniprogram/dev/wxcloud/basis/getting-started.html)
+
+---
+
+## 今日开发小结（2026-03-11）
+
+- **核心功能打通**：完成「创建房间 → 加入房间 → 发牌 → 公牌 → 开牌结果 → 返回游戏新一局」的完整闭环，单人多轮跑通。  
+- **云函数稳定化**：为 `createRoom` / `joinRoom` / `getRoom` / `deal` / `resetRound` 加上依赖声明、错误处理和可序列化返回值；统一用字符串存牌面，解决 `rank/face` 字段导致的云库写入错误。  
+- **前端状态正确性**：通过 `currentOpenId` 和房间页 `onShow + roomNeedResetRound` 标记，确保发牌状态、手牌、公牌、新一局都能正确刷新。  
+- **UI 渲染升级**：
+  - 按钮统一为深色主题下的圆角胶囊（首页、房间页、结果页）。
+  - 房间页增加本人头像+手牌居中展示、其他玩家区域、公牌牌面小卡片。  
+  - 结果页用扑克牌卡片渲染所有玩家手牌和公牌，返回按钮改为绿色渐变。  
+- **文档沉淀**：新增 `FRONTEND_STYLE_GUIDE.md`，结构化说明三页布局和可渲染元素，方便后续同事按类名统一换皮或重绘 UI。
