@@ -1,35 +1,83 @@
 <view class="result-page">
   <view class="header">
     <text>房间号：{{roomId}}</text>
+    <text class="mode-badge" wx:if="{{modeText}}">{{modeText}}</text>
   </view>
 
-  <view class="public-card" wx:if="{{publicCard}}">
-    <text class="public-label">公牌：</text>
-    <view class="poker-card poker-card-large">
-      <text class="poker-card-text {{publicCardColorClass}}">{{publicCard.text || publicCard}}</text>
+  <!-- 过庄提示 -->
+  <view class="pass-dealer-tip" wx:if="{{passDealer}}">
+    <text>🔄 庄家全胜且为豹子/同花顺，自动过庄</text>
+  </view>
+
+  <!-- ========== 庄家区域 ========== -->
+  <view class="dealer-section">
+    <view class="section-title">
+      <text class="section-title-icon">👑</text>
+      <text>庄家</text>
+    </view>
+    <view class="dealer-row" wx:if="{{dealer}}">
+      <view class="player-left">
+        <view class="avatar-wrap-result">
+          <image class="avatar avatar-dealer-result" src="{{dealer.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+          <text class="crown-result">👑</text>
+        </view>
+        <view class="player-info">
+          <text class="player-name">{{dealer.nickName}}</text>
+          <text class="hand-type-tag">{{dealer.handTypeName}}</text>
+        </view>
+      </view>
+      <view class="cards-row">
+        <block wx:for="{{dealer.cards}}" wx:key="label">
+          <view class="card-with-label">
+            <text class="card-label-mini">{{item.label}}</text>
+            <view class="poker-card">
+              <text class="poker-card-text {{item.colorClass}}">{{item.text}}</text>
+            </view>
+          </view>
+        </block>
+      </view>
+      <view class="score-change-row">
+        <text class="drinks-tag" wx:if="{{dealer.drinks > 0}}">🍺 喝 {{dealer.drinks}} 杯</text>
+        <text class="drinks-tag drinks-zero" wx:else>未喝酒</text>
+        <text class="score-total">累计：{{dealer.totalScore}} 杯</text>
+      </view>
     </view>
   </view>
 
-  <view class="players-list">
-    <block wx:for="{{players}}" wx:key="openId">
-      <view class="player-row">
-        <image class="avatar" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
-        <view class="info">
-          <text class="name">{{item.nickName || '玩家'}}</text>
-          <view class="card" wx:if="{{item.card}}">
-            <text class="card-label">手牌：</text>
-            <view class="poker-card">
-              <text class="poker-card-text {{item.cardColorClass}}">{{item.card.text || item.card}}</text>
-            </view>
+  <!-- ========== 玩家对比列表 ========== -->
+  <view class="players-section">
+    <view class="section-title">
+      <text>对比结果</text>
+    </view>
+    <block wx:for="{{playerResults}}" wx:key="openId">
+      <view class="player-result-card">
+        <view class="result-badge {{item.resultClass}}">{{item.resultText}}</view>
+        <view class="player-left">
+          <image class="avatar" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+          <view class="player-info">
+            <text class="player-name">{{item.nickName}}</text>
+            <text class="hand-type-tag">{{item.handTypeName}}</text>
           </view>
-          <text class="card placeholder" wx:else>手牌：未发牌</text>
+        </view>
+        <view class="cards-row">
+          <block wx:for="{{item.cards}}" wx:for-item="card" wx:key="label">
+            <view class="card-with-label">
+              <text class="card-label-mini">{{card.label}}</text>
+              <view class="poker-card">
+                <text class="poker-card-text {{card.colorClass}}">{{card.text}}</text>
+              </view>
+            </view>
+          </block>
+        </view>
+        <view class="settle-row">
+          <text class="bet-info">注码：{{item.bet}}</text>
+          <text class="drinks-tag" wx:if="{{item.drinks > 0}}">🍺 喝 {{item.drinks}} 杯</text>
+          <text class="drinks-tag drinks-zero" wx:else>未喝酒</text>
+          <text class="score-total">累计：{{item.totalScore}} 杯</text>
         </view>
       </view>
     </block>
   </view>
 
-  <button class="back-btn" bindtap="onBack">
-    返回游戏
-  </button>
+  <button class="back-btn" bindtap="onBack">返回游戏</button>
 </view>
-

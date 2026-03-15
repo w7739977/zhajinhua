@@ -51,17 +51,20 @@ exports.main = async (event) => {
     const roomDoc = {
       roomId,
       ownerOpenId: openId,
+      dealerOpenId: openId,
       status: 'waiting',
       deck,
       publicCard: null,
+      roundResult: null,
       players: [
         {
           openId,
           nickName,
           avatarUrl,
-          isReady: false,
           hasDealt: false,
-          card: null
+          card: null,
+          bet: null,
+          score: 0
         }
       ],
       createdAt: now,

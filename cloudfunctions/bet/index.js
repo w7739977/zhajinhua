@@ -12,13 +12,15 @@ exports.main = async (event) => {
   try {
     const wxContext = cloud.getWXContext()
     const openId = wxContext.OPENID
-
     const roomId = String(event.roomId || '').trim()
-    const nickName = event.nickName || '玩家'
-    const avatarUrl = event.avatarUrl || ''
+    const betAmount = parseInt(event.bet)
 
     if (!roomId) {
       return { ok: false, code: 'ROOM_ID_EMPTY', message: '房间号为空' }
+    }
+
+    if (![1, 2, 3].includes(betAmount)) {
+      return { ok: false, code: 'INVALID_BET', message: '注码无效，请选择1、2或3' }
     }
 
     const roomRes = await rooms.where({ roomId }).limit(1).get()
@@ -31,44 +33,51 @@ exports.main = async (event) => {
     const idx = players.findIndex((p) => p.openId === openId)
 
     if (idx === -1) {
-      players.push({
-        openId,
-        nickName,
-        avatarUrl,
-        hasDealt: false,
-        card: null,
-        bet: null,
-        score: 0
-      })
-    } else {
-      players[idx].nickName = nickName
-      players[idx].avatarUrl = avatarUrl
+      return { ok: false, code: 'PLAYER_NOT_IN_ROOM', message: '玩家不在房间内' }
     }
+
+    if (openId === room.dealerOpenId) {
+      return { ok: false, code: 'DEALER_NO_BET', message: '庄家无需下注' }
+    }
+
+    if (room.status !== 'betting') {
+      return { ok: false, code: 'NOT_BETTING', message: '当前不在下注阶段' }
+    }
+
+    if (players[idx].bet != null) {
+      return { ok: false, code: 'ALREADY_BET', message: '你已经下注了' }
+    }
+
+    players[idx].bet = betAmount
+
+    const nonDealerPlayers = players.filter((p) => p.openId !== room.dealerOpenId)
+    const allBet = nonDealerPlayers.every((p) => p.bet != null)
+    const nextStatus = allBet ? 'opening' : 'betting'
 
     await rooms.doc(room._id).update({
       data: {
         players: _.set(players),
-        status: 'waiting',
+        status: nextStatus,
         updatedAt: db.serverDate()
       }
     })
 
     return {
       ok: true,
-      openId,
       room: {
         roomId: room.roomId,
         players,
         publicCard: room.publicCard || null,
-        status: 'waiting'
+        status: nextStatus,
+        dealerOpenId: room.dealerOpenId
       }
     }
   } catch (err) {
-    console.error('joinRoom error:', err)
+    console.error('bet error:', err)
     return {
       ok: false,
-      code: 'JOIN_FAILED',
-      message: err.message || '加入房间失败'
+      code: 'BET_FAILED',
+      message: err.message || '下注失败'
     }
   }
 }

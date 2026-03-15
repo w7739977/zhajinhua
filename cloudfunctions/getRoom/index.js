@@ -25,9 +25,12 @@ exports.main = async (event) => {
       ok: true,
       room: {
         roomId: room.roomId,
+        ownerOpenId: room.ownerOpenId || '',
+        dealerOpenId: room.dealerOpenId || room.ownerOpenId || '',
         players: room.players || [],
         publicCard: room.publicCard || null,
-        status: room.status || 'waiting'
+        status: room.status || 'waiting',
+        roundResult: room.roundResult || null
       }
     }
   } catch (err) {

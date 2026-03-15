@@ -5,13 +5,13 @@ cloud.init({
 })
 
 const db = cloud.database()
+const _ = db.command
 const rooms = db.collection('rooms')
 
 function cardToText(card) {
   if (card == null) return null
   if (typeof card === 'string') return card
   if (card && typeof card.text === 'string') return card.text
-  if (card && (card.face || card.rank)) return `${card.suit || ''}${card.face || card.rank}`
   return null
 }
 
@@ -24,8 +24,7 @@ function playersWithTextCard(players) {
   if (!Array.isArray(players)) return []
   return players.map((p) => {
     if (!p) return p
-    const text = cardToText(p.card)
-    return { ...p, card: text }
+    return { ...p, card: cardToText(p.card) }
   })
 }
 
@@ -53,9 +52,8 @@ exports.main = async (event) => {
       return { ok: false, code: 'PLAYER_NOT_IN_ROOM', message: '玩家不在房间内' }
     }
 
-    const allReady = players.length > 0 && players.every((p) => p.isReady)
-    if (!allReady) {
-      return { ok: false, code: 'NOT_ALL_READY', message: '未全部准备' }
+    if (room.status !== 'waiting' && room.status !== 'dealing') {
+      return { ok: false, code: 'WRONG_STATUS', message: '当前不在发牌阶段' }
     }
 
     if (players[idx].hasDealt) {
@@ -66,7 +64,8 @@ exports.main = async (event) => {
           roomId: room.roomId,
           players: room.players,
           publicCard: room.publicCard || null,
-          status: room.status || 'ready'
+          status: room.status,
+          dealerOpenId: room.dealerOpenId
         }
       }
     }
@@ -85,19 +84,13 @@ exports.main = async (event) => {
       publicCard = cardToText(deck.shift())
     }
 
-    const nextStatus = 'dealing'
-    const nextRoom = {
-      roomId: room.roomId,
-      players,
-      publicCard,
-      status: nextStatus
-    }
+    const nextStatus = allDealt ? 'betting' : 'dealing'
 
     await rooms.doc(room._id).update({
       data: {
-        deck: deckToTextArray(deck),
-        players: playersWithTextCard(players),
-        publicCard,
+        deck: _.set(deckToTextArray(deck)),
+        players: _.set(playersWithTextCard(players)),
+        publicCard: _.set(publicCard),
         status: nextStatus,
         updatedAt: db.serverDate()
       }
@@ -106,7 +99,13 @@ exports.main = async (event) => {
     return {
       ok: true,
       currentOpenId: openId,
-      room: nextRoom
+      room: {
+        roomId: room.roomId,
+        players,
+        publicCard,
+        status: nextStatus,
+        dealerOpenId: room.dealerOpenId
+      }
     }
   } catch (err) {
     console.error('deal error:', err)

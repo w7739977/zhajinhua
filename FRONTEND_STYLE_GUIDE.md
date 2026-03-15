@@ -1,9 +1,9 @@
-## 诈金花小程序前端样式概览（V3）
+## 诈金花小程序前端样式概览（V4 — 庄家制）
 
 ### 全局基调
 
-- **配色**：整体升级为深墨绿丝绒牌桌风格，基底在 `#081510 ~ #163e2f` 之间，搭配浅绿色高光与少量金色边线。
-- **圆角与按钮**：首页主操作依然统一为胶囊形操作行（border-radius: 999rpx）；房间页与结果页的核心按钮则更偏“赌场桌边控制按钮”，加入边框、内高光与压感阴影。
+- **配色**：深墨绿丝绒牌桌风格，基底在 `#081510 ~ #163e2f` 之间，搭配浅绿色高光与少量金色边线。庄家相关元素使用 **金黄色** (`#facc15` 系列) 强调。
+- **圆角与按钮**：首页主操作为胶囊形操作行（border-radius: 999rpx）；房间页底栏按钮为赌场桌边控制按钮风格；下注为圆形筹码。
 - **字体**：默认微信字体，标题偏大号（约 52rpx / 30rpx），正文 24–30rpx。
 
 ---
@@ -12,41 +12,7 @@
 
 ### 1. 首页（`pages/index`）
 
-**整体布局**
-- 容器：`container`
-  - 垂直居中布局，左右 40rpx 内边距；背景改为深绿丝绒渐变。
-
-**主要块**
-- 标题：`title`
-  - 文本「诈金花」，大号、加粗；可渲染为带轻微发光或渐变的标题。
-- 首页授权弹框：`auth-mask > auth-modal`
-  - 首次进入首页时覆盖在大厅之上，用户确认昵称头像前不展示创建/加入房间操作区。
-  - 内含：
-    - `auth-title`：弹框标题
-    - `auth-desc`：说明文案
-    - `profile-preview`：授权后的头像昵称预览
-    - `profile-avatar`：头像预览
-    - `profile-name`：授权昵称预览
-    - `auth-action-group`：授权区操作容器
-    - `view.action-row.btn-primary`：授权头像及昵称
-    - `view.action-row.input-row > input.action-input`：自定义昵称输入框
-    - `view.action-row.btn-secondary`：确认并进入大厅
-- 按钮区：
-  - 容器：`action-panel`
-    - 仅在身份信息确认完成后展示。
-  - **创建房间按钮**：`view.action-row.btn-primary`
-    - 语义：主操作。
-    - 样式：宽度占满容器，高度 `88rpx`，蓝色实底，白字。
-  - **加入房间按钮**：`view.action-row.btn-secondary`
-    - 语义：次主操作。
-    - 样式：宽度占满容器，高度 `88rpx`，深灰背景，白字。
-  - **加入房间输入框**：`view.action-row.input-row > input.action-input`
-    - 深灰输入框、`999rpx` 圆角、白字，占满宽度；与相邻按钮共享同一外层尺寸。
-  - **确认加入按钮**：`view.action-row.btn-primary`
-    - 样式同创建房间。
-
-> 设计提示：首页当前采用“丝绒背景 + 统一操作行”方案，按钮与输入框必须共享同一套高、宽、圆角、阴影规则，否则在小程序环境里容易出现宽度不齐。
-> 当前逻辑上，首页是一个“先确认身份，再进入大厅操作”的双层结构，渲染时不要去掉弹框遮罩与确认门槛。
+> 首页结构未变，参见之前文档。核心为"先确认身份（授权弹框），再进入大厅操作"的双层结构。
 
 ---
 
@@ -58,67 +24,65 @@
 
 **顶部区域**
 - 房间头：`room-header`
-  - 左侧：`room-id` 文本（例如「房间号：997025」）。
-  - 右侧：`button.invite-btn`（邀请好友）
-    - 蓝色胶囊按钮，适合作为轻量操作；`open-type="share"`。
+  - 左侧：`room-id`（如「房间号：997025」）
+  - 右侧：`button.invite-btn`（邀请好友，`open-type="share"`）
+
+**测试面板**（仅 test 分支）
+- `mock-panel`：包含"添加模拟玩家""模拟发牌""模拟下注""清空模拟"四个按钮
 
 **桌面区域**
 - 容器：`table-stage`
   - 左列：`side-column.left-column`
-  - 中心：`center-zone`
+  - 中心：`center-zone`（公牌）
   - 右列：`side-column.right-column`
-- 排布规则：
-  - 当前玩家始终固定在底部；
-  - 其他玩家以入房顺序为基础旋转后稳定分配到左右两列；
-  - 右侧更接近“逆时针上行”，左侧为绕桌返回后的继续排列。
-- 单个其他玩家：`other-player-item`
-  - 内含 `seat-base` 作为轻量座位底座阴影。
-  - 头像：`image.avatar`（80rpx 圆形，暗背景），并带状态外圈颜色。
-  - 昵称：`text.nickname`（22rpx，浅灰）。
-  - 准备状态：`text.ready-tag` / `text.ready-tag.pending`，分别表示「已准备 / 未准备」。
-  - 发牌状态：`text.deal-tag` / `text.deal-tag.pending`，分别表示「已发牌 / 未发牌」。
+- 排布规则：当前玩家固定底部，其他玩家按入房顺序旋转分布到左右两列
+
+**单个其他玩家：`other-player-item`**
+- `avatar-wrap`：头像容器（relative 定位，承载皇冠）
+  - `image.avatar`（72rpx 圆形），根据状态加类：
+    - `.avatar-dealer`：**庄家** — 黄色 4rpx 粗边框 + 外发光
+    - `.avatar-dealt`：已发牌 — 绿色边框
+    - `.avatar-pending`：未发牌 — 灰色边框
+  - `text.crown-badge`：**庄家皇冠 👑**，absolute 定位右上角
+- `text.nickname`（22rpx，浅灰）
+- `text.mock-tag`：模拟玩家标识（紫色）
+- `text.deal-tag` / `.deal-tag.pending`：发牌/未发牌
+- `text.bet-tag` / `.bet-tag.pending`：注码 / 待下注（金黄色）
+- `text.score-tag`：累计喝酒杯数（🍺）
+- **选人模式**：庄家在 `opening` 状态点击玩家头像，选中时加 `.player-selected` 类（金色边框+高亮背景）
 
 **公牌区**
-- 外层：`center-zone`
-  - 一个椭圆桌心容器，用来承托公牌焦点。
-- 容器：`center-card`
-  - 标签：`center-card-label`，弱高亮文字「公牌」或「等待公牌」。
-  - 扑克牌：`view.poker-card.poker-card-large > text.poker-card-text`
-    - 小白卡片（约 90×126rpx），圆角、浅灰边框、阴影，牌面文字如「♣A」。
-  - 无公牌时：`center-card card-placeholder`
-    - 保留桌面焦点位置，避免布局突然塌陷。
+- `center-zone` > `center-card`：椭圆桌心容器
+  - `center-card-label`：「公牌」/ 「等待公牌」
+  - `poker-card.poker-card-large`：白色卡面
 
-**本人信息区（底部中间偏上）**
-- 容器：`self-block`
-  - 内含 `self-seat-base`，模拟自己座位的桌边底座阴影。
-  - 头像：`image.self-avatar`（120rpx 圆形），并带状态外圈颜色。
-  - 昵称：`text.self-nickname`。
-  - 准备状态：`text.ready-tag.self-ready` 或 `text.ready-tag.pending.self-ready`。
-  - 手牌：
-    - 有牌时：
-      - `view.self-card-row`
-        - 标签：`self-hand-label`（「手牌：」）
-        - 扑克牌：`view.poker-card > text.poker-card-text`（与公牌同样样式但略小）。
-    - 无牌时：`text.self-hand-card.placeholder` 文本「手牌：未发牌」。
+**本人信息区**
+- `self-block`（fixed 定位，底部 150rpx）
+  - `avatar-wrap.avatar-wrap-self` > `self-avatar` + `crown-badge.crown-badge-self`（庄家时显示）
+  - `self-nickname`：昵称 + 庄家时追加 `(庄)`
+  - `score-tag.score-tag-self`：累计喝酒杯数
+  - 手牌：`self-card-row` > `poker-card`
+  - `self-bet-info`：已下注信息（金黄色）
 
-**底部操作区**
-- 容器：`bottom-bar bottom-bar-three`
-- 按钮：
-  - `button.btn.btn-secondary`（准备）
-    - 点击后把当前玩家状态改为已准备；已准备后按钮禁用并显示「已准备」。
-  - `button.btn.btn-primary`（发牌）
-    - 只有所有玩家都已准备且自己尚未发牌时才可点击。
-  - `button.btn.btn-secondary`（开牌）
-    - 只有所有玩家都已发牌时才可点击；任意一人点击后，全员同步跳入结果页。
-  - 视觉：
-    - 整个底栏有一个桌边托盘层；
-    - 主按钮偏绿色，带边线、内高光、压感阴影；
-    - 次按钮是偏深灰金属质感。
+**底部操作区（按状态动态切换）**
 
-> 可渲染点：
-> - 用头像外圈颜色替代一部分文字状态提示，降低阅读负担。  
-> - 当前房间页已经有轻量卡牌出现动画，继续增强时建议保持克制。  
-> - 桌面中心、公牌、自己座位是当前视觉主焦点。
+| 状态 | 底栏内容 |
+|------|----------|
+| `waiting` / `dealing` | `[发牌]` 全宽主按钮 |
+| `betting`（庄家） | `等待玩家下注...` 文案 |
+| `betting`（已下注） | `已下注 X 分，等待其他玩家` |
+| `betting`（未下注） | 注码选择器：三个圆形筹码 `[1] [2] [3]` |
+| `opening`（庄家） | `[开牌(N)] [全开] [不过庄]` 三按钮 |
+| `opening`（非庄家） | `等待庄家开牌...` 文案 |
+
+- 按钮样式：
+  - `.btn-full`：100% 宽度（发牌阶段）
+  - `.btn-sm`：30% 宽度（开牌三按钮）
+  - `.btn-primary`：绿色渐变主按钮
+  - `.btn-secondary`：深灰金属质感次按钮
+- 筹码样式：`.bet-chip`
+  - 96rpx 圆形，金黄色渐变背景 + 金色边框
+  - 大号数字（36rpx），按压态缩放
 
 ---
 
@@ -126,100 +90,104 @@
 
 **整体布局**
 - 容器：`result-page`
-  - 深绿牌桌背景，顶部房间号，中部公牌和玩家列表，底部「返回游戏」。
+  - 深绿牌桌背景，顶部房间号+模式标签，中部庄家区和玩家对比，底部返回按钮
 
-**顶部房间信息**
-- `header`：居中显示「房间号：XXXXXX」。
+**顶部**
+- `header`：居中显示房间号 + `mode-badge`（金黄色标签：选择开牌/全开/全开不过庄）
 
-**公牌展示**
-- 容器：`public-card`
-  - 一个强化的桌面浮层区，强调结果页中的公共信息。
-  - 标签：`public-label`（弱高亮「公牌：」）。
-  - 扑克牌：`view.poker-card.poker-card-large > text.poker-card-text`。
+**过庄提示**
+- `pass-dealer-tip`：金黄色背景提示条，显示「🔄 庄家全胜且为豹子/同花顺，自动过庄」
 
-**玩家列表**
-- 容器：`players-list`。
-- 行容器：`player-row`
-  - 头像：`image.avatar`（72rpx 圆形）。
-  - 信息块：`view.info`
-    - 昵称：`text.name`。
-    - 手牌：
-      - 有牌：`view.card` 下包含：
-        - `text.card-label`（「手牌：」）
-        - `view.poker-card > text.poker-card-text`（牌面）；
-      - 无牌：`text.card.placeholder` 文本「手牌：未发牌」。
+**庄家区域：`dealer-section`**
+- 金黄色微光背景 + 金色边框
+- `dealer-row`：
+  - `avatar-wrap-result` > `avatar.avatar-dealer-result`（黄边框）+ `crown-result` 皇冠
+  - `player-info`：昵称 + `hand-type-tag`（牌型名称，浅绿标签）
+  - `cards-row`：三张牌并排
+    - `card-with-label`：每张牌上方有小字标签（`公` / `手` / `万能`）
+    - `poker-card` > `poker-card-text`
+  - `score-change-row`：本轮喝酒杯数（🍺 喝 N 杯 / 未喝酒）+ 累计杯数
 
-**底部操作按钮**
-- `button.back-btn`
-  - 绿色赌场质感主按钮，固定在底部中间，文案「返回游戏」。点击后返回房间页，房间会进入等待准备状态。
+**玩家对比列表：`players-section`**
+- 每位被选中玩家一个 `player-result-card`：
+  - `result-badge`（右上角）：「庄家赢」红色 / 「玩家赢」绿色（平局算庄家赢，无平局状态）
+  - `player-left`：头像 + 昵称 + 牌型标签
+  - `cards-row`：三张牌（公牌 + 手牌 + 万能牌→XX）
+  - `settle-row`：注码 + 本轮喝酒杯数 + 累计杯数
 
-> 可渲染点：
-> - 玩家行可在「自己」和「其他人」之间做轻微背景区分（当前实现逻辑上没有区分，可后续增加 `isSelf`）。
-> - 公牌区域可以加轻微发光或边框高亮，强调是公共信息。
+**底部**
+- `back-btn`：绿色赌场主按钮，文案「返回游戏」
 
 ---
 
 ## 通用组件与样式约定
 
-### 操作行（ActionRow）
+### 操作行（ActionRow）— 首页
 
-- 首页核心类名：`.action-row`, `.btn-primary`, `.btn-secondary`, `.input-row`, `.action-input`。
-- 统一特点：
-  - 胶囊造型（border-radius: 999rpx）。
-  - 高度统一为 `88rpx`。
-  - 首页主按钮仍可用清晰的蓝色 CTA；输入框外层也使用同样的圆角、阴影与高度。
-  - 首页优先使用 `view + bindtap`，避免小程序原生 `button` 自带默认间距。
+- 类名：`.action-row`, `.btn-primary`, `.btn-secondary`, `.input-row`, `.action-input`
+- 胶囊造型（999rpx），高度 88rpx，首页优先用 `view + bindtap`
 
 ### 扑克牌（PokerCard）
 
-- 类名：`.poker-card`, `.poker-card-large`, `.poker-card-text`, `.poker-card-text-red`。
-- 数据源：仅使用字符串如 `"♠A"`，前端负责直接渲染在卡片中央。
-- 风格：
-  - 白色卡面、圆角、轻阴影。
-  - 大小：普通牌约 `70×100rpx`，公牌略大 `90×126rpx`。
-  - `♥` / `♦` 应使用 `.poker-card-text-red` 显示为红色。
-  - 可带轻量 `cardReveal` 动画，但避免太夸张。
+- 类名：`.poker-card`, `.poker-card-large`, `.poker-card-text`, `.poker-card-text-red`
+- 数据源：仅字符串如 `"♠A"`
+- 白色卡面、圆角、暗阴影；普通 70×100rpx，公牌 90×126rpx
+- `♥` / `♦` 使用红色类 `.poker-card-text-red`
 
 ### 头像（Avatar）
 
-- 统一使用 `image` + 圆角 50%，背景深灰，大小随场景轻微变化（80rpx / 96rpx / 120rpx）。
-- 房间页通过外圈颜色表达玩家状态：
-  - `.avatar-pending`：灰色外圈，表示未准备
-  - `.avatar-ready`：蓝色外圈，表示已准备
-  - `.avatar-dealt`：绿色外圈，表示已发牌
+- 圆角 50%，背景深灰，大小 72rpx / 100rpx / 120rpx
+- 状态类：
+  - `.avatar-pending`：灰色外圈（未发牌）
+  - `.avatar-dealt`：绿色外圈（已发牌）
+  - `.avatar-dealer`：**黄色粗边框 + 外发光**（庄家）
+
+### 庄家标识
+
+- `.crown-badge`：皇冠 👑 emoji，absolute 定位右上角（28rpx）
+- `.crown-badge-self`：自己座位的皇冠（34rpx，更大）
+- `.avatar-dealer`：4rpx 黄色实线边框 + box-shadow 发光
+
+### 选人高亮
+
+- `.player-selected`：金黄色背景 + 金色边框 + 外发光阴影
+
+### 下注筹码
+
+- `.bet-chip`：96rpx 圆形，金黄渐变 + 金色 3rpx 边框，大号数字
+- `.bet-picker`：垂直居中容器，含标签和三筹码
+- `.bet-label`：金黄色小字「选择注码」
+
+### 状态标签
+
+- `.deal-tag` / `.deal-tag.pending`：蓝色/灰色圆角标签
+- `.bet-tag` / `.bet-tag.pending`：金黄色/灰色圆角标签
+- `.score-tag`：累计喝酒杯数标签（🍺）
+- `.mock-tag`：紫色模拟玩家标签
+
+### 结果页专用
+
+- `.result-badge`：右上角胜负标签
+  - `.result-win`：绿色
+  - `.result-lose`：红色
+  - `.result-tie`：灰色（已废弃，平局算庄家赢）
+- `.hand-type-tag`：浅绿圆角标签显示牌型名（豹子/同花顺等）
+- `.card-with-label` > `.card-label-mini`：卡牌上方小字标签（公/手/万能）
+- `.drinks-tag`：本轮喝酒杯数（金黄色）
+- `.drinks-zero`：未喝酒（灰色）
 
 ---
 
 ## 给后续渲染同事的建议
 
-1. **保持层级关系**：三个页面的结构都遵循「顶部信息 → 中部主要内容 → 底部操作按钮」的节奏，适合继续做动画或主题皮肤。
+1. **保持层级关系**：三页遵循「顶部信息 → 中部内容 → 底部操作」节奏。
 2. **可替换点**：
-   - 丝绒桌布的色相、桌边高光、按钮金属感都可以继续微调，但尽量保留“深墨绿桌布 + 浅绿高光 + 少量金边”的总体关系。  
-   - 扑克牌卡片可以换成图片背景或更复杂的 CSS 卡片，但建议仍用 `poker-card` 类。
+   - 丝绒桌布色相、按钮金属感、筹码样式都可微调
+   - 扑克牌可换成图片卡面，保留 `poker-card` 类
+   - 庄家皇冠可换成自定义图标，保留 `crown-badge` 类
 3. **不要改动的数据结构**：
-   - 仍假定手牌、公牌为字符串，如 `"♠A"`；若改用复杂对象，请同步修改云函数与前端逻辑。
-   - 房间页联机状态依赖 `room.status` 与 `players[].isReady / hasDealt / card`，渲染或重构样式时不要破坏这些字段与 UI 的映射关系。
-
-
-
----
-
-## 最新交互补充（准备制）
-
-### 房间页最新交互规则
-
-- 首次进入房间时，所有玩家默认显示 `未准备`。
-- 当所有玩家都点了「准备」后，才允许点击「发牌」。
-- 当所有玩家都发牌后，才允许点击「开牌」。
-- 任意一位玩家点击「开牌」后，所有在房间页的玩家会同步跳到结果页。
-- 从结果页返回后，回到房间页等待再次准备，不再直接进入可发牌状态。
-
-### 渲染建议
-
-- `ready-tag` 建议使用弱强调状态样式：
-  - 已准备：绿色或蓝绿色轻底色 + 高亮文字。
-  - 未准备：灰色轻底色 + 中性文字。
-- 三按钮底部栏应维持明确主次层级：
-  - `准备`：次级按钮。
-  - `发牌`：主按钮。
-  - `开牌`：次级按钮，但在可点击时应明显高亮。
+   - 手牌、公牌为字符串如 `"♠A"`
+   - 房间状态依赖 `room.status`（waiting/dealing/betting/opening/opened）
+   - 玩家字段：`hasDealt`、`card`、`bet`、`score`
+   - 庄家字段：`dealerOpenId`
+   - 开牌结果：`roundResult`（含万能牌、牌型、比大小、过庄判断）

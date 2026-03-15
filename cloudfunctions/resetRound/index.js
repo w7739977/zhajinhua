@@ -5,6 +5,7 @@ cloud.init({
 })
 
 const db = cloud.database()
+const _ = db.command
 const rooms = db.collection('rooms')
 
 function createDeck() {
@@ -28,6 +29,12 @@ function shuffle(array) {
   return arr
 }
 
+function getNextDealer(players, currentDealerOpenId) {
+  const idx = players.findIndex((p) => p.openId === currentDealerOpenId)
+  if (idx === -1) return players[0].openId
+  return players[(idx + 1) % players.length].openId
+}
+
 exports.main = async (event) => {
   try {
     const roomId = String(event.roomId || '').trim()
@@ -42,48 +49,50 @@ exports.main = async (event) => {
 
     const room = roomRes.data[0]
     const players = room.players || []
-    const alreadyReset =
-      ['waiting', 'ready'].includes(room.status || 'waiting') &&
-      !room.publicCard &&
-      players.every((p) => !p.card && !p.hasDealt)
+    let deck = room.deck || []
+    let dealerOpenId = room.dealerOpenId || room.ownerOpenId
 
-    if (alreadyReset) {
-      return {
-        ok: true,
-        room: {
-          roomId: room.roomId,
-          players,
-          publicCard: null,
-          status: room.status || 'waiting'
-        }
-      }
+    const cardsNeeded = players.length + 1
+    let deckRefreshed = false
+    let autoPassed = false
+
+    if (deck.length < cardsNeeded) {
+      dealerOpenId = getNextDealer(players, dealerOpenId)
+      deck = shuffle(createDeck())
+      deckRefreshed = true
+      autoPassed = true
     }
 
     const nextPlayers = players.map((p) => ({
       ...p,
-      isReady: false,
       hasDealt: false,
-      card: null
+      card: null,
+      bet: null
     }))
-    const deck = shuffle(createDeck())
 
     await rooms.doc(room._id).update({
       data: {
-        deck,
-        players: nextPlayers,
-        publicCard: null,
+        deck: _.set(deck),
+        players: _.set(nextPlayers),
+        publicCard: _.set(null),
         status: 'waiting',
+        dealerOpenId,
+        roundResult: _.set(null),
         updatedAt: db.serverDate()
       }
     })
 
     return {
       ok: true,
+      deckRefreshed,
+      autoPassed,
+      dealerOpenId,
       room: {
         roomId: room.roomId,
         players: nextPlayers,
         publicCard: null,
-        status: 'waiting'
+        status: 'waiting',
+        dealerOpenId
       }
     }
   } catch (err) {
