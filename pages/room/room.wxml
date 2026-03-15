@@ -6,29 +6,33 @@
 
   <view class="mock-panel" wx:if="{{showMockTools}}">
     <view class="mock-panel-header">
-      <text class="mock-panel-title">测试分支模拟面板</text>
+      <text class="mock-panel-title">测试面板</text>
       <text class="mock-panel-meta">模拟玩家：{{mockCount}}</text>
     </view>
     <view class="mock-actions">
-      <button class="mock-btn" bindtap="onMockSetup">添加6个模拟玩家</button>
-      <button class="mock-btn" bindtap="onMockReadyOthers">模拟其他人准备</button>
-      <button class="mock-btn" bindtap="onMockDealOthers">模拟其他人发牌</button>
-      <button class="mock-btn danger" bindtap="onMockClear">清空模拟玩家</button>
+      <button class="mock-btn" bindtap="onMockSetup">添加模拟玩家</button>
+      <button class="mock-btn" bindtap="onMockDealOthers">模拟发牌</button>
+      <button class="mock-btn" bindtap="onMockBetOthers">模拟下注</button>
+      <button class="mock-btn danger" bindtap="onMockClear">清空模拟</button>
     </view>
   </view>
 
   <view class="table-stage" wx:if="{{otherPlayers.length > 0 || publicCardText}}">
     <view class="side-column left-column">
       <block wx:for="{{leftPlayers}}" wx:key="openId">
-        <view class="other-player-item">
+        <view class="other-player-item {{item.selected ? 'player-selected' : ''}}" bindtap="onTogglePlayer" data-openid="{{item.openId}}">
           <view class="seat-base"></view>
-          <image class="avatar {{item.hasDealt ? 'avatar-dealt' : (item.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+          <view class="avatar-wrap">
+            <image class="avatar {{item.isDealer ? 'avatar-dealer' : (item.hasDealt ? 'avatar-dealt' : 'avatar-pending')}}" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+            <text wx:if="{{item.isDealer}}" class="crown-badge">👑</text>
+          </view>
           <text class="nickname">{{item.nickName || '玩家'}}</text>
           <text class="mock-tag" wx:if="{{item.isMock}}">模拟</text>
-          <text class="ready-tag" wx:if="{{item.isReady}}">已准备</text>
-          <text class="ready-tag pending" wx:else>未准备</text>
           <text class="deal-tag" wx:if="{{item.hasDealt}}">已发牌</text>
-          <text class="deal-tag pending" wx:else>未发牌</text>
+          <text class="deal-tag pending" wx:elif="{{status === 'waiting' || status === 'dealing'}}">未发牌</text>
+          <text class="bet-tag" wx:if="{{item.bet != null}}">注码：{{item.bet}}</text>
+          <text class="bet-tag pending" wx:elif="{{status === 'betting'}}">待下注</text>
+          <text class="score-tag" wx:if="{{item.score !== 0}}">{{item.score > 0 ? '+' : ''}}{{item.score}}</text>
         </view>
       </block>
     </view>
@@ -47,15 +51,19 @@
 
     <view class="side-column right-column">
       <block wx:for="{{rightPlayers}}" wx:key="openId">
-        <view class="other-player-item">
+        <view class="other-player-item {{item.selected ? 'player-selected' : ''}}" bindtap="onTogglePlayer" data-openid="{{item.openId}}">
           <view class="seat-base"></view>
-          <image class="avatar {{item.hasDealt ? 'avatar-dealt' : (item.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+          <view class="avatar-wrap">
+            <image class="avatar {{item.isDealer ? 'avatar-dealer' : (item.hasDealt ? 'avatar-dealt' : 'avatar-pending')}}" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+            <text wx:if="{{item.isDealer}}" class="crown-badge">👑</text>
+          </view>
           <text class="nickname">{{item.nickName || '玩家'}}</text>
           <text class="mock-tag" wx:if="{{item.isMock}}">模拟</text>
-          <text class="ready-tag" wx:if="{{item.isReady}}">已准备</text>
-          <text class="ready-tag pending" wx:else>未准备</text>
           <text class="deal-tag" wx:if="{{item.hasDealt}}">已发牌</text>
-          <text class="deal-tag pending" wx:else>未发牌</text>
+          <text class="deal-tag pending" wx:elif="{{status === 'waiting' || status === 'dealing'}}">未发牌</text>
+          <text class="bet-tag" wx:if="{{item.bet != null}}">注码：{{item.bet}}</text>
+          <text class="bet-tag pending" wx:elif="{{status === 'betting'}}">待下注</text>
+          <text class="score-tag" wx:if="{{item.score !== 0}}">{{item.score > 0 ? '+' : ''}}{{item.score}}</text>
         </view>
       </block>
     </view>
@@ -63,10 +71,12 @@
 
   <view class="self-block" wx:if="{{selfPlayer}}">
     <view class="self-seat-base"></view>
-    <image class="self-avatar {{selfPlayer.hasDealt ? 'avatar-dealt' : (selfPlayer.isReady ? 'avatar-ready' : 'avatar-pending')}}" src="{{selfPlayer.avatarUrl || defaultAvatar}}" mode="aspectFill" />
-    <text class="self-nickname">{{selfPlayer.nickName || '我'}}</text>
-    <text class="ready-tag self-ready" wx:if="{{selfPlayer.isReady}}">已准备</text>
-    <text class="ready-tag pending self-ready" wx:else>未准备</text>
+    <view class="avatar-wrap avatar-wrap-self">
+      <image class="self-avatar {{isDealer ? 'avatar-dealer' : (selfPlayer.hasDealt ? 'avatar-dealt' : 'avatar-pending')}}" src="{{selfPlayer.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+      <text wx:if="{{isDealer}}" class="crown-badge crown-badge-self">👑</text>
+    </view>
+    <text class="self-nickname">{{selfPlayer.nickName || '我'}} {{isDealer ? '(庄)' : ''}}</text>
+    <text class="score-tag score-tag-self" wx:if="{{selfPlayer.score !== 0}}">累计：{{selfPlayer.score > 0 ? '+' : ''}}{{selfPlayer.score}}</text>
     <view wx:if="{{selfPlayer.card}}" class="self-card-row">
       <text class="self-hand-label">手牌：</text>
       <view class="poker-card">
@@ -74,11 +84,47 @@
       </view>
     </view>
     <text class="self-hand-card placeholder" wx:else>手牌：未发牌</text>
+    <text class="self-bet-info" wx:if="{{selfPlayer.bet != null && !isDealer}}">已下注：{{selfPlayer.bet}}</text>
   </view>
 
-  <view class="bottom-bar bottom-bar-three">
-    <button class="btn btn-secondary" bindtap="onReady" disabled="{{isReady}}">{{isReady ? '已准备' : '准备'}}</button>
-    <button class="btn btn-primary" bindtap="onDeal" disabled="{{!canDeal}}">发牌</button>
-    <button class="btn btn-secondary" bindtap="onOpen" disabled="{{!canOpen}}">开牌</button>
+  <!-- ==================== 底部操作区 ==================== -->
+
+  <!-- 发牌/下注阶段 -->
+  <view class="bottom-bar" wx:if="{{status === 'waiting' || status === 'dealing'}}">
+    <button class="btn btn-primary btn-full" bindtap="onDeal" disabled="{{!canDeal}}">
+      {{hasDealt ? '已发牌' : '发牌'}}
+    </button>
+  </view>
+
+  <!-- 下注阶段 -->
+  <view class="bottom-bar" wx:elif="{{status === 'betting'}}">
+    <view class="bet-bar" wx:if="{{isDealer}}">
+      <text class="status-text">等待玩家下注...</text>
+    </view>
+    <view class="bet-bar" wx:elif="{{hasBet}}">
+      <text class="status-text">已下注 {{selfPlayer.bet}} 分，等待其他玩家</text>
+    </view>
+    <view class="bet-picker" wx:else>
+      <text class="bet-label">选择注码</text>
+      <view class="bet-options">
+        <view class="bet-chip" bindtap="onBet" data-amount="1">1</view>
+        <view class="bet-chip" bindtap="onBet" data-amount="2">2</view>
+        <view class="bet-chip" bindtap="onBet" data-amount="3">3</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 开牌阶段（庄家） -->
+  <view class="bottom-bar bottom-bar-open" wx:elif="{{status === 'opening' && isDealer}}">
+    <button class="btn btn-primary btn-sm" bindtap="onOpenSelected" disabled="{{selectedCount === 0}}">
+      开牌({{selectedCount}})
+    </button>
+    <button class="btn btn-secondary btn-sm" bindtap="onOpenAll">全开</button>
+    <button class="btn btn-secondary btn-sm" bindtap="onOpenAllNoPass">不过庄</button>
+  </view>
+
+  <!-- 开牌阶段（非庄家） -->
+  <view class="bottom-bar" wx:elif="{{status === 'opening' && !isDealer}}">
+    <text class="status-text">等待庄家开牌...</text>
   </view>
 </view>
