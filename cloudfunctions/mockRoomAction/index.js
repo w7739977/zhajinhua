@@ -5,6 +5,7 @@ cloud.init({
 })
 
 const db = cloud.database()
+const _ = db.command
 const rooms = db.collection('rooms')
 
 function createDeck() {
@@ -74,12 +75,17 @@ function serializeRoom(room, players, publicCard, status) {
 }
 
 async function updateRoom(room, data) {
-  await rooms.doc(room._id).update({
-    data: {
-      ...data,
-      updatedAt: db.serverDate()
+  const wrapped = {}
+  for (const key of Object.keys(data)) {
+    const val = data[key]
+    if (Array.isArray(val) || (val !== null && typeof val === 'object') || val === null) {
+      wrapped[key] = _.set(val)
+    } else {
+      wrapped[key] = val
     }
-  })
+  }
+  wrapped.updatedAt = db.serverDate()
+  await rooms.doc(room._id).update({ data: wrapped })
 }
 
 exports.main = async (event) => {

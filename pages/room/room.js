@@ -69,6 +69,7 @@ Page({
     const needReset = wx.getStorageSync('roomNeedResetRound')
     if (needReset) {
       wx.removeStorageSync('roomNeedResetRound')
+      this.setData({ selectedPlayers: {}, selectedCount: 0 })
       wx.showLoading({ title: '新一局...', mask: true })
       wx.cloud
         .callFunction({ name: 'resetRound', data: { roomId } })
@@ -78,14 +79,18 @@ Page({
           if (!result.ok) {
             wx.showToast({ title: result.message || '重置失败', icon: 'none' })
           }
-          if (result.autoPassed) {
-            wx.showToast({ title: '牌组不足，自动过庄', icon: 'none', duration: 2000 })
+          const passed = result.autoPassed || wx.getStorageSync('roomPassedDealer')
+          wx.removeStorageSync('roomPassedDealer')
+          if (passed) {
+            const tip = result.autoPassed ? '牌组不足，自动过庄' : '庄家全胜，自动过庄'
+            wx.showToast({ title: tip, icon: 'none', duration: 2500 })
           }
           this.fetchRoom()
           this.initRoomWatcher()
         })
         .catch(() => {
           wx.hideLoading()
+          wx.removeStorageSync('roomPassedDealer')
           wx.showToast({ title: '重置失败', icon: 'none' })
           this.fetchRoom()
           this.initRoomWatcher()

@@ -5,6 +5,7 @@ cloud.init({
 })
 
 const db = cloud.database()
+const _ = db.command
 const rooms = db.collection('rooms')
 
 // ==================== 牌型计算引擎 ====================
@@ -202,18 +203,12 @@ exports.main = async (event) => {
       const cmp = compareHands(dealerBest.hand, targetBest.hand)
 
       let result
-      let betChange = 0
       const bet = target.bet || 0
 
-      if (cmp > 0) {
+      if (cmp >= 0) {
         result = 'dealerWin'
-        betChange = bet
-      } else if (cmp < 0) {
-        result = 'playerWin'
-        betChange = -bet
-        dealerWinAll = false
       } else {
-        result = 'tie'
+        result = 'playerWin'
         dealerWinAll = false
       }
 
@@ -227,27 +222,25 @@ exports.main = async (event) => {
         handTypeName: targetBest.hand.typeName,
         bet,
         result,
-        betChange
+        playerDrinks: result === 'dealerWin' ? bet : 0,
+        dealerDrinks: result === 'playerWin' ? bet : 0
       })
     }
 
-    let dealerScoreChange = 0
+    let dealerTotalDrinks = 0
     for (const pr of playerResults) {
       const pIdx = players.findIndex((p) => p.openId === pr.openId)
       if (pIdx === -1) continue
 
-      if (pr.result === 'dealerWin') {
-        players[pIdx].score = (players[pIdx].score || 0) - pr.bet
-        dealerScoreChange += pr.bet
-      } else if (pr.result === 'playerWin') {
-        players[pIdx].score = (players[pIdx].score || 0) + pr.bet
-        dealerScoreChange -= pr.bet
+      if (pr.playerDrinks > 0) {
+        players[pIdx].score = (players[pIdx].score || 0) + pr.playerDrinks
       }
+      dealerTotalDrinks += pr.dealerDrinks
     }
 
     const dealerIdx = players.findIndex((p) => p.openId === room.dealerOpenId)
     if (dealerIdx !== -1) {
-      players[dealerIdx].score = (players[dealerIdx].score || 0) + dealerScoreChange
+      players[dealerIdx].score = (players[dealerIdx].score || 0) + dealerTotalDrinks
     }
 
     let passDealer = false
@@ -269,7 +262,7 @@ exports.main = async (event) => {
       dealerWildCard: dealerBest.wildCard,
       dealerHandType: dealerBest.hand.type,
       dealerHandTypeName: dealerBest.hand.typeName,
-      dealerScoreChange,
+      dealerDrinks: dealerTotalDrinks,
       publicCard,
       playerResults,
       passDealer,
@@ -279,10 +272,10 @@ exports.main = async (event) => {
 
     await rooms.doc(room._id).update({
       data: {
-        players,
+        players: _.set(players),
         status: 'opened',
         dealerOpenId: nextDealerOpenId,
-        roundResult,
+        roundResult: _.set(roundResult),
         updatedAt: db.serverDate()
       }
     })

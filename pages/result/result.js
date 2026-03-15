@@ -63,7 +63,7 @@ Page({
       avatarUrl: rr.dealerAvatarUrl || (dealerPlayer && dealerPlayer.avatarUrl) || '',
       handTypeName: rr.dealerHandTypeName,
       cards: dealerCards,
-      scoreChange: rr.dealerScoreChange || 0,
+      drinks: rr.dealerDrinks || 0,
       totalScore: dealerPlayer ? dealerPlayer.score || 0 : 0
     }
 
@@ -96,7 +96,7 @@ Page({
         handTypeName: pr.handTypeName,
         resultText,
         resultClass,
-        scoreChange: pr.result === 'dealerWin' ? -pr.bet : pr.result === 'playerWin' ? pr.bet : 0,
+        drinks: pr.playerDrinks || 0,
         totalScore: p ? p.score || 0 : 0
       }
     })
@@ -121,6 +121,9 @@ Page({
 
   onBack() {
     wx.setStorageSync('roomNeedResetRound', true)
+    if (this.data.passDealer) {
+      wx.setStorageSync('roomPassedDealer', true)
+    }
     wx.navigateBack()
   }
 })

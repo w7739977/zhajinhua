@@ -32,7 +32,7 @@
           <text class="deal-tag pending" wx:elif="{{status === 'waiting' || status === 'dealing'}}">未发牌</text>
           <text class="bet-tag" wx:if="{{item.bet != null}}">注码：{{item.bet}}</text>
           <text class="bet-tag pending" wx:elif="{{status === 'betting'}}">待下注</text>
-          <text class="score-tag" wx:if="{{item.score !== 0}}">{{item.score > 0 ? '+' : ''}}{{item.score}}</text>
+          <text class="score-tag" wx:if="{{item.score > 0}}">🍺{{item.score}}</text>
         </view>
       </block>
     </view>
@@ -63,7 +63,7 @@
           <text class="deal-tag pending" wx:elif="{{status === 'waiting' || status === 'dealing'}}">未发牌</text>
           <text class="bet-tag" wx:if="{{item.bet != null}}">注码：{{item.bet}}</text>
           <text class="bet-tag pending" wx:elif="{{status === 'betting'}}">待下注</text>
-          <text class="score-tag" wx:if="{{item.score !== 0}}">{{item.score > 0 ? '+' : ''}}{{item.score}}</text>
+          <text class="score-tag" wx:if="{{item.score > 0}}">🍺{{item.score}}</text>
         </view>
       </block>
     </view>
@@ -76,7 +76,7 @@
       <text wx:if="{{isDealer}}" class="crown-badge crown-badge-self">👑</text>
     </view>
     <text class="self-nickname">{{selfPlayer.nickName || '我'}} {{isDealer ? '(庄)' : ''}}</text>
-    <text class="score-tag score-tag-self" wx:if="{{selfPlayer.score !== 0}}">累计：{{selfPlayer.score > 0 ? '+' : ''}}{{selfPlayer.score}}</text>
+    <text class="score-tag score-tag-self" wx:if="{{selfPlayer.score > 0}}">🍺累计：{{selfPlayer.score}} 杯</text>
     <view wx:if="{{selfPlayer.card}}" class="self-card-row">
       <text class="self-hand-label">手牌：</text>
       <view class="poker-card">
@@ -102,7 +102,7 @@
       <text class="status-text">等待玩家下注...</text>
     </view>
     <view class="bet-bar" wx:elif="{{hasBet}}">
-      <text class="status-text">已下注 {{selfPlayer.bet}} 分，等待其他玩家</text>
+      <text class="status-text">已下注 {{selfPlayer.bet}} 杯，等待其他玩家</text>
     </view>
     <view class="bet-picker" wx:else>
       <text class="bet-label">选择注码</text>

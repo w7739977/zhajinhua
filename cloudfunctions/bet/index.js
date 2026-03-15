@@ -5,6 +5,7 @@ cloud.init({
 })
 
 const db = cloud.database()
+const _ = db.command
 const rooms = db.collection('rooms')
 
 exports.main = async (event) => {
@@ -55,7 +56,7 @@ exports.main = async (event) => {
 
     await rooms.doc(room._id).update({
       data: {
-        players,
+        players: _.set(players),
         status: nextStatus,
         updatedAt: db.serverDate()
       }

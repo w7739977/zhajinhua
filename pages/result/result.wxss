@@ -183,7 +183,7 @@
   color: #dc2626;
 }
 
-/* ========== 得分 ========== */
+/* ========== 喝酒 & 累计 ========== */
 
 .score-change-row {
   display: flex;
@@ -191,17 +191,16 @@
   gap: 16rpx;
 }
 
-.score-change {
-  font-size: 30rpx;
+.drinks-tag {
+  font-size: 28rpx;
   font-weight: 700;
+  color: #fbbf24;
 }
 
-.score-positive {
-  color: #4ade80;
-}
-
-.score-negative {
-  color: #f87171;
+.drinks-zero {
+  font-size: 24rpx;
+  font-weight: 400;
+  color: #6b7280;
 }
 
 .score-total {

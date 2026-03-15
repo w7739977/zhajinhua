@@ -48,7 +48,7 @@
 - `text.mock-tag`：模拟玩家标识（紫色）
 - `text.deal-tag` / `.deal-tag.pending`：发牌/未发牌
 - `text.bet-tag` / `.bet-tag.pending`：注码 / 待下注（金黄色）
-- `text.score-tag`：累计得分（红色系）
+- `text.score-tag`：累计喝酒杯数（🍺）
 - **选人模式**：庄家在 `opening` 状态点击玩家头像，选中时加 `.player-selected` 类（金色边框+高亮背景）
 
 **公牌区**
@@ -60,7 +60,7 @@
 - `self-block`（fixed 定位，底部 150rpx）
   - `avatar-wrap.avatar-wrap-self` > `self-avatar` + `crown-badge.crown-badge-self`（庄家时显示）
   - `self-nickname`：昵称 + 庄家时追加 `(庄)`
-  - `score-tag.score-tag-self`：累计得分
+  - `score-tag.score-tag-self`：累计喝酒杯数
   - 手牌：`self-card-row` > `poker-card`
   - `self-bet-info`：已下注信息（金黄色）
 
@@ -106,14 +106,14 @@
   - `cards-row`：三张牌并排
     - `card-with-label`：每张牌上方有小字标签（`公` / `手` / `万能`）
     - `poker-card` > `poker-card-text`
-  - `score-change-row`：本轮得分变化（绿=正，红=负）+ 累计总分
+  - `score-change-row`：本轮喝酒杯数（🍺 喝 N 杯 / 未喝酒）+ 累计杯数
 
 **玩家对比列表：`players-section`**
 - 每位被选中玩家一个 `player-result-card`：
-  - `result-badge`（右上角）：「庄家赢」红色 / 「玩家赢」绿色 / 「平局」灰色
+  - `result-badge`（右上角）：「庄家赢」红色 / 「玩家赢」绿色（平局算庄家赢，无平局状态）
   - `player-left`：头像 + 昵称 + 牌型标签
   - `cards-row`：三张牌（公牌 + 手牌 + 万能牌→XX）
-  - `settle-row`：注码金额 + 本轮得分变化 + 累计总分
+  - `settle-row`：注码 + 本轮喝酒杯数 + 累计杯数
 
 **底部**
 - `back-btn`：绿色赌场主按钮，文案「返回游戏」
@@ -162,7 +162,7 @@
 
 - `.deal-tag` / `.deal-tag.pending`：蓝色/灰色圆角标签
 - `.bet-tag` / `.bet-tag.pending`：金黄色/灰色圆角标签
-- `.score-tag`：红色系累计得分标签
+- `.score-tag`：累计喝酒杯数标签（🍺）
 - `.mock-tag`：紫色模拟玩家标签
 
 ### 结果页专用
@@ -170,10 +170,11 @@
 - `.result-badge`：右上角胜负标签
   - `.result-win`：绿色
   - `.result-lose`：红色
-  - `.result-tie`：灰色
+  - `.result-tie`：灰色（已废弃，平局算庄家赢）
 - `.hand-type-tag`：浅绿圆角标签显示牌型名（豹子/同花顺等）
 - `.card-with-label` > `.card-label-mini`：卡牌上方小字标签（公/手/万能）
-- `.score-change` + `.score-positive` / `.score-negative`：得分变化（绿=赢/红=输）
+- `.drinks-tag`：本轮喝酒杯数（金黄色）
+- `.drinks-zero`：未喝酒（灰色）
 
 ---
 

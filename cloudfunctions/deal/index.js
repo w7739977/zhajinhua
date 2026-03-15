@@ -5,6 +5,7 @@ cloud.init({
 })
 
 const db = cloud.database()
+const _ = db.command
 const rooms = db.collection('rooms')
 
 function cardToText(card) {
@@ -87,9 +88,9 @@ exports.main = async (event) => {
 
     await rooms.doc(room._id).update({
       data: {
-        deck: deckToTextArray(deck),
-        players: playersWithTextCard(players),
-        publicCard,
+        deck: _.set(deckToTextArray(deck)),
+        players: _.set(playersWithTextCard(players)),
+        publicCard: _.set(publicCard),
         status: nextStatus,
         updatedAt: db.serverDate()
       }

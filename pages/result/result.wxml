@@ -37,10 +37,9 @@
         </block>
       </view>
       <view class="score-change-row">
-        <text class="score-change {{dealer.scoreChange >= 0 ? 'score-positive' : 'score-negative'}}">
-          {{dealer.scoreChange >= 0 ? '+' : ''}}{{dealer.scoreChange}}
-        </text>
-        <text class="score-total">累计：{{dealer.totalScore}}</text>
+        <text class="drinks-tag" wx:if="{{dealer.drinks > 0}}">🍺 喝 {{dealer.drinks}} 杯</text>
+        <text class="drinks-tag drinks-zero" wx:else>未喝酒</text>
+        <text class="score-total">累计：{{dealer.totalScore}} 杯</text>
       </view>
     </view>
   </view>
@@ -72,10 +71,9 @@
         </view>
         <view class="settle-row">
           <text class="bet-info">注码：{{item.bet}}</text>
-          <text class="score-change {{item.scoreChange >= 0 ? 'score-positive' : 'score-negative'}}">
-            {{item.scoreChange >= 0 ? '+' : ''}}{{item.scoreChange}}
-          </text>
-          <text class="score-total">累计：{{item.totalScore}}</text>
+          <text class="drinks-tag" wx:if="{{item.drinks > 0}}">🍺 喝 {{item.drinks}} 杯</text>
+          <text class="drinks-tag drinks-zero" wx:else>未喝酒</text>
+          <text class="score-total">累计：{{item.totalScore}} 杯</text>
         </view>
       </view>
     </block>
