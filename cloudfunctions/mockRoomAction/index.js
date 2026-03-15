@@ -32,86 +32,33 @@ function normalizePlayers(players) {
   return (players || []).map((player) => ({
     ...player,
     isMock: player && player.isMock === true,
-    isReady: player && player.isReady === true,
     hasDealt: player && player.hasDealt === true,
-    card: player && player.card ? player.card : null
+    card: player && player.card ? player.card : null,
+    bet: player && player.bet != null ? player.bet : null,
+    score: player && player.score != null ? player.score : 0
   }))
 }
 
 function buildMockPlayers() {
-  return [
-    {
-      openId: 'mock-player-a',
-      nickName: '测试玩家A',
-      avatarUrl: '',
-      isMock: true,
-      isReady: false,
-      hasDealt: false,
-      card: null
-    },
-    {
-      openId: 'mock-player-b',
-      nickName: '测试玩家B',
-      avatarUrl: '',
-      isMock: true,
-      isReady: false,
-      hasDealt: false,
-      card: null
-    },
-    {
-      openId: 'mock-player-c',
-      nickName: '测试玩家C',
-      avatarUrl: '',
-      isMock: true,
-      isReady: false,
-      hasDealt: false,
-      card: null
-    },
-    {
-      openId: 'mock-player-d',
-      nickName: '测试玩家D',
-      avatarUrl: '',
-      isMock: true,
-      isReady: false,
-      hasDealt: false,
-      card: null
-    },
-    {
-      openId: 'mock-player-e',
-      nickName: '测试玩家E',
-      avatarUrl: '',
-      isMock: true,
-      isReady: false,
-      hasDealt: false,
-      card: null
-    },
-    {
-      openId: 'mock-player-f',
-      nickName: '测试玩家F',
-      avatarUrl: '',
-      isMock: true,
-      isReady: false,
-      hasDealt: false,
-      card: null
-    },
-    {
-      openId: 'mock-player-g',
-      nickName: '测试玩家G',
-      avatarUrl: '',
-      isMock: true,
-      isReady: false,
-      hasDealt: false,
-      card: null
-    }
-  ]
+  const names = ['测试A', '测试B', '测试C', '测试D', '测试E', '测试F', '测试G']
+  return names.map((name, i) => ({
+    openId: `mock-player-${String.fromCharCode(97 + i)}`,
+    nickName: name,
+    avatarUrl: '',
+    isMock: true,
+    hasDealt: false,
+    card: null,
+    bet: null,
+    score: 0
+  }))
 }
 
 function resetPlayerRound(player) {
   return {
     ...player,
-    isReady: false,
     hasDealt: false,
-    card: null
+    card: null,
+    bet: null
   }
 }
 
@@ -119,6 +66,7 @@ function serializeRoom(room, players, publicCard, status) {
   return {
     roomId: room.roomId,
     ownerOpenId: room.ownerOpenId || '',
+    dealerOpenId: room.dealerOpenId || room.ownerOpenId || '',
     players,
     publicCard: publicCard || null,
     status: status || 'waiting'
@@ -144,7 +92,6 @@ exports.main = async (event) => {
     if (!roomId) {
       return { ok: false, code: 'ROOM_ID_EMPTY', message: '房间号为空' }
     }
-
     if (!action) {
       return { ok: false, code: 'ACTION_EMPTY', message: '缺少测试动作' }
     }
@@ -162,89 +109,97 @@ exports.main = async (event) => {
     if (!self) {
       return { ok: false, code: 'PLAYER_NOT_IN_ROOM', message: '玩家不在房间内' }
     }
-
     if (!isOwner) {
       return { ok: false, code: 'ONLY_OWNER_ALLOWED', message: '仅房主可操作测试面板' }
     }
 
+    // ==================== 添加模拟玩家 ====================
     if (action === 'setupMocks') {
-      const realPlayers = players.filter((player) => !player.isMock).map(resetPlayerRound)
+      const realPlayers = players.filter((p) => !p.isMock).map(resetPlayerRound)
       const nextPlayers = realPlayers.concat(buildMockPlayers())
       const nextRoom = serializeRoom(room, nextPlayers, null, 'waiting')
       await updateRoom(room, {
         deck: shuffle(createDeck()),
         players: nextPlayers,
         publicCard: null,
-        status: 'waiting'
+        status: 'waiting',
+        roundResult: null
       })
       return { ok: true, room: nextRoom }
     }
 
+    // ==================== 清空模拟玩家 ====================
     if (action === 'clearMocks') {
-      const nextPlayers = players.filter((player) => !player.isMock).map(resetPlayerRound)
+      const nextPlayers = players.filter((p) => !p.isMock).map(resetPlayerRound)
       const nextRoom = serializeRoom(room, nextPlayers, null, 'waiting')
       await updateRoom(room, {
         deck: shuffle(createDeck()),
         players: nextPlayers,
         publicCard: null,
-        status: 'waiting'
+        status: 'waiting',
+        roundResult: null
       })
       return { ok: true, room: nextRoom }
     }
 
-    const hasMockPlayers = players.some((player) => player.isMock)
+    const hasMockPlayers = players.some((p) => p.isMock)
     if (!hasMockPlayers) {
       return { ok: false, code: 'NO_MOCK_PLAYERS', message: '请先添加模拟玩家' }
     }
 
-    if (action === 'mockReadyOthers') {
-      const nextPlayers = players.map((player) =>
-        player.isMock
-          ? {
-              ...player,
-              isReady: true
-            }
-          : player
-      )
-      const nextStatus = nextPlayers.length > 0 && nextPlayers.every((player) => player.isReady) ? 'ready' : 'waiting'
-      const nextRoom = serializeRoom(room, nextPlayers, room.publicCard || null, nextStatus)
-      await updateRoom(room, {
-        players: nextPlayers,
-        status: nextStatus
-      })
-      return { ok: true, room: nextRoom }
-    }
-
+    // ==================== 模拟其他人发牌 ====================
     if (action === 'mockDealOthers') {
-      if (!(players.length > 0 && players.every((player) => player.isReady))) {
-        return { ok: false, code: 'NOT_ALL_READY', message: '请先让所有玩家准备' }
-      }
-
       const deck = Array.isArray(room.deck) ? room.deck.slice() : []
       if (!deck.length) {
         return { ok: false, code: 'DECK_EMPTY', message: '牌已经发完' }
       }
 
-      const nextPlayers = players.map((player) => ({ ...player }))
-      nextPlayers.forEach((player) => {
-        if (player.isMock && !player.hasDealt && deck.length) {
-          player.card = deck.shift()
-          player.hasDealt = true
+      const nextPlayers = players.map((p) => ({ ...p }))
+      nextPlayers.forEach((p) => {
+        if (p.isMock && !p.hasDealt && deck.length) {
+          p.card = deck.shift()
+          p.hasDealt = true
         }
       })
 
       let publicCard = room.publicCard || null
-      const allDealt = nextPlayers.length > 0 && nextPlayers.every((player) => player.hasDealt)
+      const allDealt = nextPlayers.every((p) => p.hasDealt)
       if (allDealt && !publicCard && deck.length) {
         publicCard = deck.shift()
       }
 
-      const nextStatus = nextPlayers.some((player) => player.hasDealt) ? 'dealing' : room.status || 'waiting'
+      const nextStatus = allDealt ? 'betting' : 'dealing'
       const nextRoom = serializeRoom(room, nextPlayers, publicCard, nextStatus)
       await updateRoom(room, {
         deck,
         players: nextPlayers,
         publicCard,
+        status: nextStatus
+      })
+      return { ok: true, room: nextRoom }
+    }
+
+    // ==================== 模拟其他人下注 ====================
+    if (action === 'mockBetOthers') {
+      if (room.status !== 'betting') {
+        return { ok: false, code: 'NOT_BETTING', message: '当前不在下注阶段' }
+      }
+
+      const dealerOpenId = room.dealerOpenId || room.ownerOpenId
+      const nextPlayers = players.map((p) => {
+        if (p.isMock && p.bet == null && p.openId !== dealerOpenId) {
+          return { ...p, bet: Math.floor(Math.random() * 3) + 1 }
+        }
+        return { ...p }
+      })
+
+      const nonDealer = nextPlayers.filter((p) => p.openId !== dealerOpenId)
+      const allBet = nonDealer.every((p) => p.bet != null)
+      const nextStatus = allBet ? 'opening' : 'betting'
+
+      const nextRoom = serializeRoom(room, nextPlayers, room.publicCard, nextStatus)
+      await updateRoom(room, {
+        players: nextPlayers,
         status: nextStatus
       })
       return { ok: true, room: nextRoom }
