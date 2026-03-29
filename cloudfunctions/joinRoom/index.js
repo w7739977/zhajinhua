@@ -28,9 +28,15 @@ exports.main = async (event) => {
 
     const room = roomRes.data[0]
     const players = room.players || []
+    const status = room.status || 'waiting'
     const idx = players.findIndex((p) => p.openId === openId)
+    const isNewPlayer = idx === -1
 
-    if (idx === -1) {
+    if (isNewPlayer && status !== 'waiting') {
+      return { ok: false, code: 'GAME_IN_PROGRESS', message: '游戏中，请等待本局结束后再加入' }
+    }
+
+    if (isNewPlayer) {
       players.push({
         openId,
         nickName,
@@ -48,7 +54,6 @@ exports.main = async (event) => {
     await rooms.doc(room._id).update({
       data: {
         players: _.set(players),
-        status: 'waiting',
         updatedAt: db.serverDate()
       }
     })
@@ -58,9 +63,11 @@ exports.main = async (event) => {
       openId,
       room: {
         roomId: room.roomId,
+        ownerOpenId: room.ownerOpenId || '',
+        dealerOpenId: room.dealerOpenId || room.ownerOpenId || '',
         players,
         publicCard: room.publicCard || null,
-        status: 'waiting'
+        status
       }
     }
   } catch (err) {

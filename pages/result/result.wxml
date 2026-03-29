@@ -6,14 +6,20 @@
 
   <!-- 过庄提示 -->
   <view class="pass-dealer-tip" wx:if="{{passDealer}}">
-    <text>🔄 庄家全胜且为豹子/同花顺，自动过庄</text>
+    <text>🔄 庄家全开全胜，自动过庄</text>
+  </view>
+
+  <!-- 庄家全输提示 -->
+  <view class="dealer-loss-tip" wx:if="{{dealerFullLoss}}">
+    <text>💥 庄家全开输了，所有注码合计记庄家喝酒</text>
   </view>
 
   <!-- ========== 庄家区域 ========== -->
-  <view class="dealer-section">
+  <view class="dealer-section {{dealerFullLoss ? 'dealer-section-loss' : ''}}">
     <view class="section-title">
       <text class="section-title-icon">👑</text>
       <text>庄家</text>
+      <text class="dealer-loss-badge" wx:if="{{dealer.fullLoss}}">庄家输</text>
     </view>
     <view class="dealer-row" wx:if="{{dealer}}">
       <view class="player-left">

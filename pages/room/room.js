@@ -58,7 +58,9 @@ Page({
     const roomId = options.roomId || ''
     const isOwner = options.isOwner === '1'
     this.setData({ roomId, isOwner, showMockTools: isOwner })
-    this.selfOpenId = app.globalData.openId || ''
+    this.selfOpenId = app.globalData.openId
+      || wx.getStorageSync('selfOpenId')
+      || ''
     this.isNavigatingToResult = false
   },
 
@@ -108,6 +110,13 @@ Page({
 
   onUnload() {
     this.closeRoomWatcher()
+  },
+
+  _saveSelfOpenId(openId) {
+    if (!openId) return
+    this.selfOpenId = openId
+    app.globalData.openId = openId
+    wx.setStorageSync('selfOpenId', openId)
   },
 
   buildSelf(players, selfOpenId) {
@@ -215,6 +224,10 @@ Page({
 
   initRoomWatcher() {
     if (roomWatcher || !this.data.roomId) return
+    this._createWatcher()
+  },
+
+  _createWatcher() {
     const db = wx.cloud.database()
     roomWatcher = db
       .collection('rooms')
@@ -227,6 +240,14 @@ Page({
         },
         onError: (err) => {
           console.error('room watch error', err)
+          roomWatcher = null
+          setTimeout(() => {
+            if (!roomWatcher && this.data.roomId) {
+              console.log('watcher 断线重连...')
+              this._createWatcher()
+              this.fetchRoom()
+            }
+          }, 3000)
         }
       })
   },
@@ -239,20 +260,25 @@ Page({
   },
 
   async fetchRoom() {
-    const { roomId } = this.data
+    const { roomId, players } = this.data
     if (!roomId) return
+    const silent = Array.isArray(players) && players.length > 0
     try {
-      wx.showLoading({ title: '加载中...', mask: true })
+      if (!silent) wx.showLoading({ title: '加载中...', mask: true })
       const res = await wx.cloud.callFunction({ name: 'getRoom', data: { roomId } })
-      wx.hideLoading()
+      if (!silent) wx.hideLoading()
       const result = res.result || {}
       if (!result.ok) {
         wx.showToast({ title: result.message || '房间不存在', icon: 'none' })
         return
       }
+      if (result.openId && !this.selfOpenId) {
+        this._saveSelfOpenId(result.openId)
+      }
       this.updateRoomView(result.room)
     } catch (e) {
-      wx.hideLoading()
+      if (!silent) wx.hideLoading()
+      console.error('[getRoom] 调用异常:', e)
       wx.showToast({ title: '加载失败', icon: 'none' })
     }
   },
@@ -281,8 +307,7 @@ Page({
           return
         }
         if (result.currentOpenId && !this.selfOpenId) {
-          this.selfOpenId = result.currentOpenId
-          app.globalData.openId = result.currentOpenId
+          this._saveSelfOpenId(result.currentOpenId)
         }
         if (result.room) this.updateRoomView(result.room)
       })

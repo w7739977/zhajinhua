@@ -1,6 +1,6 @@
 .room-page {
   min-height: 100vh;
-  padding: 32rpx 32rpx 180rpx;
+  padding: 32rpx 32rpx 280rpx;
   background:
     radial-gradient(circle at 50% 26%, rgba(110, 231, 183, 0.12), transparent 20%),
     radial-gradient(circle at 22% 18%, rgba(16, 185, 129, 0.08), transparent 24%),
@@ -324,7 +324,7 @@
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 150rpx;
+  bottom: 250rpx;
   min-width: 240rpx;
   display: flex;
   flex-direction: column;
@@ -425,16 +425,17 @@
 
 .score-tag {
   margin-top: 6rpx;
-  padding: 4rpx 12rpx;
+  padding: 4rpx 14rpx;
   border-radius: 999rpx;
   background: rgba(239, 68, 68, 0.14);
   color: #fca5a5;
-  font-size: 18rpx;
+  font-size: 26rpx;
   font-weight: 600;
 }
 
 .score-tag-self {
   margin-top: 8rpx;
+  font-size: 28rpx;
 }
 
 .mock-tag {

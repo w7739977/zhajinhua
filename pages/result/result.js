@@ -14,6 +14,7 @@ Page({
     dealer: null,
     playerResults: [],
     passDealer: false,
+    dealerFullLoss: false,
     mode: '',
     modeText: '',
     defaultAvatar: ''
@@ -57,6 +58,8 @@ Page({
 
     const dealerPlayer = allPlayers.find((p) => p.openId === rr.dealerOpenId)
 
+    const dealerFullLoss = !!rr.dealerFullLoss
+
     const dealer = {
       openId: rr.dealerOpenId,
       nickName: rr.dealerNickName || (dealerPlayer && dealerPlayer.nickName) || '庄家',
@@ -64,7 +67,8 @@ Page({
       handTypeName: rr.dealerHandTypeName,
       cards: dealerCards,
       drinks: rr.dealerDrinks || 0,
-      totalScore: dealerPlayer ? dealerPlayer.score || 0 : 0
+      totalScore: dealerPlayer ? dealerPlayer.score || 0 : 0,
+      fullLoss: dealerFullLoss
     }
 
     const playerResults = (rr.playerResults || []).map((pr) => {
@@ -77,7 +81,15 @@ Page({
 
       let resultText = ''
       let resultClass = ''
-      if (pr.result === 'dealerWin') {
+      if (dealerFullLoss) {
+        if (pr.result === 'playerWin') {
+          resultText = '玩家赢'
+          resultClass = 'result-win'
+        } else {
+          resultText = '比牌胜'
+          resultClass = 'result-neutral'
+        }
+      } else if (pr.result === 'dealerWin') {
         resultText = '庄家赢'
         resultClass = 'result-lose'
       } else if (pr.result === 'playerWin') {
@@ -114,6 +126,7 @@ Page({
       dealer,
       playerResults,
       passDealer: !!rr.passDealer,
+      dealerFullLoss,
       mode: rr.mode,
       modeText: modeMap[rr.mode] || ''
     })

@@ -9,6 +9,8 @@ const rooms = db.collection('rooms')
 
 exports.main = async (event) => {
   try {
+    const wxContext = cloud.getWXContext()
+    const openId = wxContext.OPENID || ''
     const roomId = String(event.roomId || '').trim()
 
     if (!roomId) {
@@ -23,6 +25,7 @@ exports.main = async (event) => {
     const room = roomRes.data[0]
     return {
       ok: true,
+      openId,
       room: {
         roomId: room.roomId,
         ownerOpenId: room.ownerOpenId || '',

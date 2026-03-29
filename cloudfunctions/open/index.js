@@ -227,31 +227,43 @@ exports.main = async (event) => {
       })
     }
 
+    // openAll 全输全赢制：输任意一家 → 庄家全输，所有注码合计记庄家；全胜 → 闲家各自喝，自动过庄
+    // openAllNoPass / selectPlayers：逐个结算，不过庄
+    const isOpenAll = mode === 'openAll'
+    const dealerFullLoss = isOpenAll && !dealerWinAll && targetOpenIds.length > 0
+
     let dealerTotalDrinks = 0
-    for (const pr of playerResults) {
-      const pIdx = players.findIndex((p) => p.openId === pr.openId)
-      if (pIdx === -1) continue
-
-      if (pr.playerDrinks > 0) {
-        players[pIdx].score = (players[pIdx].score || 0) + pr.playerDrinks
-      }
-      dealerTotalDrinks += pr.dealerDrinks
-    }
-
     const dealerIdx = players.findIndex((p) => p.openId === room.dealerOpenId)
-    if (dealerIdx !== -1) {
-      players[dealerIdx].score = (players[dealerIdx].score || 0) + dealerTotalDrinks
+
+    if (dealerFullLoss) {
+      for (const pr of playerResults) {
+        pr.playerDrinks = 0
+        pr.dealerDrinks = 0
+      }
+      dealerTotalDrinks = playerResults.reduce((sum, pr) => sum + (pr.bet || 0), 0)
+      if (dealerIdx !== -1) {
+        players[dealerIdx].score = (players[dealerIdx].score || 0) + dealerTotalDrinks
+      }
+    } else {
+      for (const pr of playerResults) {
+        const pIdx = players.findIndex((p) => p.openId === pr.openId)
+        if (pIdx === -1) continue
+        if (pr.playerDrinks > 0) {
+          players[pIdx].score = (players[pIdx].score || 0) + pr.playerDrinks
+        }
+        dealerTotalDrinks += pr.dealerDrinks
+      }
+      if (dealerIdx !== -1) {
+        players[dealerIdx].score = (players[dealerIdx].score || 0) + dealerTotalDrinks
+      }
     }
 
     let passDealer = false
     let nextDealerOpenId = room.dealerOpenId
 
-    if (mode === 'openAll' && dealerWinAll && targetOpenIds.length > 0) {
-      const dt = dealerBest.hand.type
-      if (dt === HAND_TYPE.THREE_OF_A_KIND || dt === HAND_TYPE.STRAIGHT_FLUSH) {
-        passDealer = true
-        nextDealerOpenId = getNextDealer(players, room.dealerOpenId)
-      }
+    if (isOpenAll && dealerWinAll && targetOpenIds.length > 0) {
+      passDealer = true
+      nextDealerOpenId = getNextDealer(players, room.dealerOpenId)
     }
 
     const roundResult = {
@@ -263,6 +275,7 @@ exports.main = async (event) => {
       dealerHandType: dealerBest.hand.type,
       dealerHandTypeName: dealerBest.hand.typeName,
       dealerDrinks: dealerTotalDrinks,
+      dealerFullLoss: !!dealerFullLoss,
       publicCard,
       playerResults,
       passDealer,
