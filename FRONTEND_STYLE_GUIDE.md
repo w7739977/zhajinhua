@@ -27,9 +27,6 @@
   - 左侧：`room-id`（如「房间号：997025」）
   - 右侧：`button.invite-btn`（邀请好友，`open-type="share"`）
 
-**测试面板**（仅 test 分支）
-- `mock-panel`：包含"添加模拟玩家""模拟发牌""模拟下注""清空模拟"四个按钮
-
 **桌面区域**
 - 容器：`table-stage`
   - 左列：`side-column.left-column`
@@ -45,7 +42,6 @@
     - `.avatar-pending`：未发牌 — 灰色边框
   - `text.crown-badge`：**庄家皇冠 👑**，absolute 定位右上角
 - `text.nickname`（22rpx，浅灰）
-- `text.mock-tag`：模拟玩家标识（紫色）
 - `text.deal-tag` / `.deal-tag.pending`：发牌/未发牌
 - `text.bet-tag` / `.bet-tag.pending`：注码 / 待下注（金黄色）
 - `text.score-tag`：累计喝酒杯数（🍺）
@@ -163,8 +159,6 @@
 - `.deal-tag` / `.deal-tag.pending`：蓝色/灰色圆角标签
 - `.bet-tag` / `.bet-tag.pending`：金黄色/灰色圆角标签
 - `.score-tag`：累计喝酒杯数标签（🍺）
-- `.mock-tag`：紫色模拟玩家标签
-
 ### 结果页专用
 
 - `.result-badge`：右上角胜负标签

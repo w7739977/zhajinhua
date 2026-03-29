@@ -29,8 +29,6 @@ Page({
   data: {
     roomId: '',
     isOwner: false,
-    showMockTools: false,
-    mockCount: 0,
     players: [],
     displayPlayers: [],
     otherPlayers: [],
@@ -140,7 +138,6 @@ Page({
     const status = room.status || 'waiting'
     const dealerOpenId = room.dealerOpenId || room.ownerOpenId || ''
     const selfOpenId = this.selfOpenId
-    const showMockTools = !!(this.data.isOwner || (room.ownerOpenId && room.ownerOpenId === selfOpenId))
 
     const ordered = rotatePlayers(players, selfOpenId).map((p) => ({
       ...p,
@@ -167,7 +164,6 @@ Page({
       (publicCard && (typeof publicCard === 'string' ? publicCard : publicCard.text)) || ''
     const publicCardColorClass = getCardColorClass(publicCard)
     const selfCardColorClass = getCardColorClass(self && self.card)
-    const mockCount = players.filter((p) => p.isMock === true).length
 
     const allDealt = players.length > 0 && players.every((p) => p.hasDealt === true)
     const hasDealt = !!(self && self.hasDealt === true)
@@ -198,8 +194,6 @@ Page({
       status,
       dealerOpenId,
       isDealer,
-      showMockTools,
-      mockCount,
       hasDealt,
       canDeal,
       hasBet,
@@ -401,43 +395,4 @@ Page({
       })
   },
 
-  // ==================== 测试面板 ====================
-  runMockAction(action, loadingTitle) {
-    const { roomId, showMockTools } = this.data
-    if (!roomId || !showMockTools) return
-
-    wx.showLoading({ title: loadingTitle, mask: true })
-    wx.cloud
-      .callFunction({ name: 'mockRoomAction', data: { roomId, action } })
-      .then((res) => {
-        wx.hideLoading()
-        const result = (res && res.result) || {}
-        if (!result.ok) {
-          wx.showToast({ title: result.message || '测试操作失败', icon: 'none' })
-          return
-        }
-        if (result.room) this.updateRoomView(result.room)
-        else this.fetchRoom()
-      })
-      .catch(() => {
-        wx.hideLoading()
-        wx.showToast({ title: '测试操作失败', icon: 'none' })
-      })
-  },
-
-  onMockSetup() {
-    this.runMockAction('setupMocks', '添加模拟玩家...')
-  },
-
-  onMockDealOthers() {
-    this.runMockAction('mockDealOthers', '模拟发牌中...')
-  },
-
-  onMockBetOthers() {
-    this.runMockAction('mockBetOthers', '模拟下注中...')
-  },
-
-  onMockClear() {
-    this.runMockAction('clearMocks', '清理模拟玩家...')
-  }
 })
