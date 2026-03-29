@@ -205,8 +205,26 @@ pj_zhajinhua/
 
 ## 分支说明
 
-- `main` — 正式版分支，只保留可上线功能
-- `test/mock-multiplayer` — 测试分支，保留模拟多人调试能力（`mockRoomAction`、测试面板）
+| 分支 | 用途 | mock 测试代码 |
+|------|------|:------------:|
+| `main` | 正式版，只保留可上线功能 | ❌ 无 |
+| `test/mock-multiplayer` | 测试版，保留模拟多人调试能力 | ✅ 有测试面板 + 模拟玩家 |
+
+## 与 Web 版的关系
+
+本项目有对应的 Web 版 `pj_zhajinhua_web`（[GitHub](https://github.com/w7739977/zhajinhua-web)），两个项目的分支一一对应：
+
+| 小程序 `pj_zhajinhua` | Web `pj_zhajinhua_web` | 用途 |
+|:---:|:---:|:---:|
+| `main` | `main` | 正式版，不含测试代码 |
+| `test/mock-multiplayer` | `test` | 测试版，含测试面板与模拟玩家 |
+
+### 联动开发原则
+
+1. **分支对应修改**：改了哪个项目的哪个分支，必须同步修改另一个项目的对应分支
+2. **先改后合**：功能开发在 test 分支完成验证后，再合并到 main 分支
+3. **查表同步**：具体代码映射关系见 [SYNC_MAP.md](./SYNC_MAP.md)，修改前先查此表定位对应文件和函数
+4. **test 独有内容不进 main**：测试面板、模拟玩家等调试功能只保留在 test 分支
 
 ---
 
