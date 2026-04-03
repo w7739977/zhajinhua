@@ -226,6 +226,23 @@ pj_zhajinhua/
 3. **查表同步**：具体代码映射关系见 [SYNC_MAP.md](./SYNC_MAP.md)，修改前先查此表定位对应文件和函数
 4. **test 独有内容不进 main**：测试面板、模拟玩家等调试功能只保留在 test 分支
 
+### Web 版领先功能（小程序版尚未实现）
+
+以下功能目前仅 Web 版实现，小程序版如需对齐可参考 Web 版代码：
+
+| 功能 | Web 版实现方式 | 对应文件 |
+|------|---------------|---------|
+| 庄家驱动发牌 | 庄家一键发牌（≥2人），跳过 dealing 直接 betting | `server.js` → `POST /api/deal` |
+| 庄家驱动下一局 | 庄家点"下一局"，`roundReset` 广播全员返回 | `server.js` → `POST /api/resetRound` |
+| 选择开牌保留手牌 | 未选中玩家手牌保留到下一轮，标记 `retainedCard` | `server.js` → `executeResetRound()` |
+| 中途加入观战 | 游戏中加入标记 `spectating`，下轮自动参与 | `server.js` → `POST /api/joinRoom` |
+| 在线状态追踪 | Socket 断连检测 + 60s 宽限期 | `server.js` → Socket.IO disconnect |
+| 离线托管 | 自动下注 1 / 庄家自动全开不过庄 / 自动 resetRound | `server.js` → `handleOfflineExpiry()` |
+| 踢人功能 | 庄家/房主移出离线玩家 | `server.js` → `POST /api/kickPlayer` |
+| 二维码邀请 | 生成加入链接的 QR 码弹窗 | `public/app.js` → `App.invite()` |
+| 断线重连优化 | `visibilitychange` 自动刷新 + Socket.IO 快速重连 | `public/app.js` |
+| 部署后自动化测试 | 密钥保护测试页，44+ 用例一键运行 | `public/test-runner.js` |
+
 ---
 
 ## 经验教训
