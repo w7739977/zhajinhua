@@ -18,9 +18,11 @@
 | `cloudfunctions/getRoom/index.js` | `server.js` → `POST /api/getRoom` | 查询房间 |
 | `cloudfunctions/deal/index.js` | `server.js` → `POST /api/deal` | 发牌 |
 | `cloudfunctions/bet/index.js` | `server.js` → `POST /api/bet` | 下注 |
-| `cloudfunctions/open/index.js` | `server.js` → `POST /api/open` | 开牌（含牌型引擎） |
+| `cloudfunctions/open/index.js` | `server.js` → `POST /api/open` | 开牌结算（调用下方引擎） |
+| `cloudfunctions/open/cardEngine.js` | `server.js` 内联 `evaluateThreeCards` 等 | **牌型引擎**（须与 Web 逐行一致） |
 | `cloudfunctions/resetRound/index.js` | `server.js` → `POST /api/resetRound` | 新一局 |
-| — | `server.js` → `POST /api/kickPlayer` | 踢人（Web 独有） |
+| `cloudfunctions/kickPlayer/index.js` | `server.js` → `POST /api/kickPlayer` | 踢人 |
+| `cloudfunctions/setOffline/index.js` | `server.js` Socket `disconnect` 等效 | 标记离线（小程序主动调用） |
 | — | `server.js` → `POST /api/_cleanTestRooms` | 测试房间清理（Web 独有，密钥保护） |
 
 > **改动规则**：修改任何云函数的业务逻辑时，必须同步修改 `server.js` 中对应的路由处理函数。
@@ -38,26 +40,30 @@
 | `pages/result/result.js` | `public/app.js` → `initResultPage()` / `renderResult()` | 结果页逻辑 |
 | `pages/result/result.wxml` | `public/app.js` → `renderResult()` 内 HTML 模板 | 结果页模板 |
 | `pages/result/result.wxss` | `public/style.css` → `/* Result Page */` 区块 | 结果页样式 |
+| `pages/qa-test/*` | `public/test-runner.js` + `#/test`（能力不同） | 小程序内场景自测页；Web 为部署后测试页 |
 | `app.js` | `public/app.js` → 顶部 `state` 对象 | 全局状态 |
 | `app.wxss` | `public/style.css` → 顶部全局样式 | 全局样式 |
 
-### 测试文件（Web 独有）
+### 测试文件
 
-| Web 版文件 | 说明 |
-|---|---|
-| `public/test-runner.js` | 部署后自动化测试运行器（44+ 用例，实时诊断） |
-| `public/app.js` → `initTestPage()` / `renderTestPage()` | 测试页路由与 UI |
-| `public/style.css` → `.test-*` 样式 | 测试页面样式（进度条、通过/失败状态） |
-| `server.js` → `POST /api/_cleanTestRooms` | 测试房间清理接口（TEST_KEY 密钥保护） |
+| 小程序 | Web 版 | 说明 |
+|---|---|---|
+| `test/cardEngine.test.js` | — | 牌型引擎金样（`require` `cloudfunctions/open/cardEngine.js`） |
+| `test/selftest.js` | — | 房间规则不变量（观战/保牌/全输等） |
+| — | `public/test-runner.js` | 部署后自动化测试（44+ 用例） |
+| — | `public/app.js` → `initTestPage()` / `renderTestPage()` | 测试页 UI |
+| — | `server.js` → `POST /api/_cleanTestRooms` | 测试房间清理（TEST_KEY） |
 
-> **访问方式**：`http://IP:端口/#/test?key=密钥`，密钥在 `server.js` 的 `TEST_KEY` 常量中配置。
+> **本地一键**：项目根目录 `npm test`（或 `node test/cardEngine.test.js && node test/selftest.js`）。  
+> **Web 测试页**：`http://IP:端口/#/test?key=密钥`，密钥在 `server.js` 的 `TEST_KEY`。
 
 ### 配置文件
 
 | 小程序文件 | Web 版对应 | 说明 |
 |---|---|---|
 | `app.json` (pages/window) | `public/index.html` + hash 路由 | 页面注册 & 导航栏 |
-| `project.config.json` | `package.json` | 项目配置 |
+| `project.config.json` | `package.json` | 须含 `cloudfunctionRoot`；**右键 `cloudfunctions` 选云环境**后才可上传云函数 |
+| `utils/releaseConfig.js` | — | `SHOW_QA_TEST_ENTRY`：正式发布改为 `false` 隐藏 QA 页入口 |
 
 ---
 
@@ -67,15 +73,15 @@
 
 | 函数 | 小程序位置 | Web 版位置 |
 |---|---|---|
-| `evaluateThreeCards()` | `cloudfunctions/open/index.js` L48-98 | `server.js` 搜索 `evaluateThreeCards` |
-| `compareHands()` | `cloudfunctions/open/index.js` L100-110 | `server.js` 搜索 `compareHands` |
-| `findBestHand()` | `cloudfunctions/open/index.js` L112-128 | `server.js` 搜索 `findBestHand` |
-| `rankValue()` | `cloudfunctions/open/index.js` L34-40 | `server.js` 搜索 `rankValue` |
-| `parseCard()` | `cloudfunctions/open/index.js` L42-46 | `server.js` 搜索 `parseCard` |
-| `getNextDealer()` | `cloudfunctions/open/index.js` L130-134 | `server.js` 搜索 `getNextDealer` |
-| `createDeck()` / `shuffle()` | `cloudfunctions/createRoom/index.js` L10-29 | `server.js` 搜索 `createDeck` / `shuffle` |
+| `evaluateThreeCards()` | `cloudfunctions/open/cardEngine.js` | `server.js` 搜索 `evaluateThreeCards` |
+| `compareHands()` | `cloudfunctions/open/cardEngine.js` | `server.js` 搜索 `compareHands` |
+| `findBestHand()` | `cloudfunctions/open/cardEngine.js` | `server.js` 搜索 `findBestHand` |
+| `rankValue()` / `parseCard()` | `cloudfunctions/open/cardEngine.js` | `server.js` 同名函数 |
+| `HAND_TYPE` / `HAND_TYPE_NAME` | `cloudfunctions/open/cardEngine.js` | `server.js` 同名常量 |
+| `getNextDealer()` | `cloudfunctions/open/index.js`（开牌/过庄用） | `server.js` 搜索 `getNextDealer` |
+| `createDeck()` / `shuffle()` | `createRoom` / `deal` / `resetRound` 等 | `server.js` 搜索 `createDeck` / `shuffle` |
 
-> **改动规则**：修改任何牌型判断、比大小逻辑、洗牌算法时，两边必须逐行同步。
+> **改动规则**：牌型相关**只改** `cardEngine.js`，改完跑 `npm test` 中金样用例，并同步 `server.js` 对应函数。洗牌算法改各云函数 / `server.js` 中实现。
 
 ---
 
@@ -102,7 +108,7 @@
 | joinRoom | `roomId`, `nickName`, `avatarUrl` | — | `playerId` |
 | getRoom | `roomId` | — | `playerId` |
 | deal | `roomId` | — | `playerId` |
-| bet | `roomId`, `bet` | — | `playerId` |
+| bet | `roomId`, `bet`, `targetPlayerId?`（庄家代离线下注） | — | `playerId` |
 | open | `roomId`, `mode`, `selectedOpenIds` | — | `playerId` |
 | resetRound | `roomId` | — | `playerId` |
 
@@ -116,15 +122,17 @@
 |---|---|---|
 | 监听房间变化 | `db.collection('rooms').where({roomId}).watch()` | `socket.on('roomUpdate', callback)` |
 | 触发更新 | 云函数写入数据库后 watch 自动触发 | API 路由调用 `broadcastRoom(roomId)` |
-| 断线重连 | `onError` → 3秒后 `_createWatcher()` | Socket.IO 自动重连 + `reconnect` 事件 |
-| 切后台恢复 | 小程序 `onShow()` 重新 `_createWatcher()` | `visibilitychange` → 重新 `joinRoom` + `fetchRoom()` |
-| 在线状态追踪 | — | Socket `disconnect` → 60s 宽限 → 离线自动处理 |
-| 离线托管(下注) | — | 自动下注 1，标记 `autoBet` |
-| 离线托管(庄家) | — | 自动全开不过庄 / 自动 resetRound |
-| 中途加入观战 | — | `joinRoom` → `spectating: true`，下轮自动参与 |
-| 选择开牌保留手牌 | — | `resetRound` 保留未选中玩家 `card`，标记 `retainedCard` |
-| 庄家下一局广播 | — | `resetRound` 发送 `roundReset` 事件，全员自动返回房间 |
-| 加入房间频道 | watch 自动按 `where` 条件过滤 | `socket.emit('joinRoom', roomId)` |
+| 断线重连 | `watch` `onError` → 3 秒后重连 + `fetchRoom` | Socket.IO `reconnect` |
+| 切后台恢复 | `onShow` → `joinRoom` + `fetchRoom` + `initRoomWatcher` | `visibilitychange` → `joinRoom` + `fetchRoom` |
+| 在线状态追踪 | `onHide` → `setOffline`；`onShow` → `joinRoom` 清离线 | Socket `disconnect` → 60s 宽限 |
+| 离线托管(下注) | 庄家 UI 代下 1 杯 + `bet.targetPlayerId` | 超时自动下注 1，`autoBet` |
+| 离线托管(庄家) | —（需人工或后续定时云函数） | 自动全开不过庄 / `resetRound` |
+| 中途加入观战 | `joinRoom` → `spectating: true` | 同左 |
+| 选择开牌保留手牌 | `resetRound` + `openedPlayerIds` | 同左 |
+| 庄家下一局 | 庄家/房主 `resetRound`；他人结果页 `watch` 等 `waiting` | `roundReset` 事件全员回房 |
+| 过庄后整副洗牌 | `resetRound` 云函数：若上一局 `passDealer`，应整副洗牌并清空全员手牌（与 Web `executeResetRound` 对齐） | `executeResetRound`：`roundResult.passDealer` → `shuffle(createDeck())`；否则牌不足再过庄洗 |
+| 邀请直链进房 | 分享进房走小程序页面逻辑（通常已 `joinRoom`） | `/#/room/:id` → 若未入 `players` 则 `renderPendingJoin`，确认后 `joinRoomFromInvite` |
+| 加入房间频道 | watch 自动按 `where` 条件过滤 | `socket.emit('joinRoom', roomId)`（Socket 频道，与 HTTP 入桌分离） |
 | 离开房间频道 | `watcher.close()` | `socket.emit('leaveRoom', roomId)` |
 
 > **改动规则**：如果修改了云函数中的数据库写入字段，Web 版 `broadcastRoom()` 调用的 `sanitizeRoom()` 也要同步返回该字段。
@@ -148,9 +156,17 @@
 | `getApp().globalData` | `state` 对象 | `app.js` 顶部 |
 | `this.setData({...})` | 修改 `state` + 调用 `renderXxx()` | 各 render 函数 |
 | `button open-type="share"` | 二维码弹窗 + 复制链接 | `app.js` → `App.invite()` / `App.copyInviteLink()` |
-| — | 庄家踢人 | `app.js` → `App.kickPlayer()` → `POST /api/kickPlayer` |
-| — | 庄家下一局 | `app.js` → `App.nextRound()` → `POST /api/resetRound` + `roundReset` 事件 |
-| — | 部署后自动化测试 | `app.js` → `initTestPage()` + `test-runner.js` → `TestRunner.run()` |
+| `wx.cloud.callFunction({ name: 'kickPlayer' })` | `App.kickPlayer()` → `POST /api/kickPlayer` | `room.js` / `app.js` |
+| `wx.cloud.callFunction({ name: 'resetRound' })` | `App.nextRound()` → `POST /api/resetRound` + `roundReset` | `result.js` / `app.js` |
+| `wx.navigateTo` → `/pages/qa-test/qa-test` | — | 小程序 QA 场景自测（`utils/releaseConfig.js` 控制入口） |
+| — | 部署后自动化测试 | `app.js` → `initTestPage()` + `test-runner.js` |
+| — | 邀请链接先入桌（Web） | `app.js` → `playerInRoom` / `renderPendingJoin` / `App.joinRoomFromInvite` / `App.backToLobbyFromInvite` |
+
+### 邀请链接进房（Web）
+
+- **链接**：`/#/room/{roomId}`；打开后 `getRoom`，若当前 `playerId` 不在 `room.players`，先展示「加入房间」（昵称 + 确认），再 `POST /api/joinRoom`，避免只拉房间快照未入桌导致房主无法发牌。
+- **`getRoom` 失败**：跳转大厅。
+- **小程序**：无等价 Hash 直链；若未来支持外部 H5 打开房间 URL，需对齐「未在 players 则必须先 join」的判定。
 
 ---
 
@@ -174,7 +190,7 @@ RoundResult 对象：
 dealerOpenId, dealerNickName, dealerAvatarUrl, dealerHandCard,
 dealerWildCard, dealerHandType, dealerHandTypeName, dealerDrinks,
 dealerFullLoss, publicCard, playerResults[], passDealer,
-nextDealerOpenId, mode
+nextDealerOpenId, mode, openedPlayerIds
 ```
 
 PlayerResult 对象：
@@ -185,21 +201,19 @@ handTypeName, bet, result, playerDrinks, dealerDrinks
 
 > **改动规则**：新增/删除/重命名任何字段时，两边的读写代码都必须同步。
 
+**牌组 / `resetRound`（联动 Web）**：Web 版 `server.js` → `executeResetRound` 在上一局 `roundResult.passDealer === true`（全开全胜过庄）时 **强制** `shuffle(createDeck())`（52 张）并清空全员手牌；`POST /api/resetRound` 响应含 `passDealerShuffle`、`autoPassed`。小程序 `cloudfunctions/resetRound` 若宣称与 Web 规则一致，须在同等条件下整副洗牌，避免「过庄后仍用半副牌」。
+
 ---
 
 ## 7. 状态流转
 
 ```
-小程序：waiting → dealing → betting → opening → opened
-                                                    |
-         ↑────────── resetRound ←───────────────────+
-
-Web 版：waiting ──庄家发牌──→ betting ──全员下注──→ opening ──庄家开牌──→ opened
-   ↑                                                              |
-   +──────────── 庄家点"下一局" (resetRound) ←───────────────────+
+小程序 / Web（对齐后）：waiting ──庄家发牌──→ betting ──全员下注──→ opening ──开牌──→ opened
+        ↑                                                              |
+        +──────────── resetRound（须 status=opened）←────────────────+
 ```
 
-> **差异说明**：小程序版保留 `dealing` 状态（每人自己发牌），Web 版由庄家一键发牌，跳过 `dealing` 直接进入 `betting`。
+> **说明**：两版均由**庄家一键发牌**，`waiting` 直接进 `betting`；旧数据或历史代码中可能出现 `dealing`，新局不再写入。
 > **改动规则**：新增状态或修改流转条件时，两边同步。
 
 ---
@@ -219,10 +233,20 @@ CSS 类名两版保持一致，便于视觉联动调整：
 | 状态标签 | `.deal-tag`, `.bet-tag`, `.score-tag`, `.mock-tag` |
 | 结果标签 | `.result-win`, `.result-lose`, `.result-tie`, `.result-neutral` |
 | 操作按钮 | `.btn-primary`, `.btn-secondary`, `.btn-full`, `.btn-sm` |
-| Web 独有标签 | `.player-tag`, `.tag-offline`, `.tag-spectating`, `.tag-retained`, `.tag-auto` |
-| Web 独有交互 | `.kick-btn`, `.spectating-banner`, `.waiting-next-round` |
+| 观战 / 离线 / 踢人（两版对齐） | `.player-tag`, `.tag-offline`, `.tag-spectating`, `.tag-retained`, `.tag-auto`, `.kick-btn`, `.spectating-banner` |
+| QA / 测试页 | 小程序：`.qa-page`、`.qa-result-item`、`.qa-manual` 等；Web：`.test-*` |
 
 > **改动规则**：修改小程序 WXSS 时，Web 版 `style.css` 同名类一起改。单位换算：`rpx / 2 = px`。
+
+---
+
+## 9. 微信开发者工具（小程序侧）
+
+| 事项 | 说明 |
+|---|---|
+| 云环境 | 资源管理器 **右键 `cloudfunctions` 文件夹** → 选择环境，须与 `app.js` 中 `wx.cloud.init({ env })` 一致 |
+| 上传失败 | 见主项目 `README.md` → 部署步骤 →「更新云函数失败」排查清单 |
+| `open` 云函数 | 目录内需同时包含 `index.js` 与 `cardEngine.js`，部署时一并上传 |
 
 ---
 
@@ -230,18 +254,13 @@ CSS 类名两版保持一致，便于视觉联动调整：
 
 每次改动时对照此表打勾：
 
-- [ ] 游戏规则/牌型算法变动 → 同步 `open` 云函数 & `server.js` 引擎部分
+- [ ] 游戏规则/牌型算法变动 → 同步 `cloudfunctions/open/cardEngine.js` & `server.js` 引擎；跑 `npm test`
+- [ ] 牌组 / 过庄洗牌 / `resetRound` → 同步 `cloudfunctions/resetRound` & Web `executeResetRound`（`passDealer` 时整副洗 52 张）
+- [ ] 牌组 / 过庄洗牌 / `resetRound` → 同步 `cloudfunctions/resetRound` & Web `executeResetRound`（`passDealer` 整副洗 52 张）
 - [ ] 接口参数变动 → 同步云函数 & API 路由 & 前端调用
 - [ ] 数据模型字段变动 → 同步云函数写入 & API 路由 & `sanitizeRoom()` & 前端渲染
 - [ ] 状态流转变动 → 同步所有涉及 `status` 判断的云函数 & API 路由 & 前端条件渲染
 - [ ] UI/样式变动 → 同步 WXSS & CSS（注意 rpx→px 换算）
 - [ ] 新增页面/功能 → 两边同时新增对应文件/路由/模板
 
-> **注意**：以下功能目前仅 Web 版实现，小程序版如需对齐，需在对应云函数和页面中实现等价逻辑：
-> - 庄家驱动发牌（一键发牌，跳过 dealing 状态）
-> - 庄家驱动下一局（resetRound 广播全员返回）
-> - 在线状态追踪、离线托管（自动下注/自动开牌）
-> - 中途加入观战
-> - 选择开牌保留手牌
-> - 踢人功能
-> - 部署后自动化测试
+> **注意**：小程序版已与 Web 版对齐以下能力（云函数 + 页面）：庄家一键发牌、`resetRound` 下一局、观战入房、保留手牌、`kickPlayer` / `setOffline`、离线展示与庄家代下注（1 杯）、结果页监听 `waiting` 自动返回；**部署后自动化测试**仍以 Web / CI 为主，小程序需真机联调。**过庄洗牌**：Web 已实现 `passDealer` 后必洗 52 张；小程序 `resetRound` 请与 [SYNC_MAP.md](./SYNC_MAP.md) 第六节「牌组 / resetRound」对照实现。
